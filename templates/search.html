@@ -5,6 +5,28 @@
     <title>Title</title>
 </head>
 <body>
-
+    <div>
+        <button><a href="{% url 'main' %}">메인으로</a></button>
+    </div>
+    <div>
+        <form action="{% url 'search' %}" method="post">
+            {% csrf_token %}
+            <input type="text" id="table" name="table">
+            <input type="submit" value="등록">
+        </form>
+    </div>
+    <div style="overflow:auto; width:auto; height:300px;">
+        <table>
+            <tbody>
+                {% for data in data_set %}
+                <tr>
+                    {% for i in data %}
+                    <td>{{ i }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
