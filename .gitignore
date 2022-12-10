@@ -1,0 +1,5 @@
+board/
+db.sqlite3
+__pycache__
+migrations
+mysite/settings.py
