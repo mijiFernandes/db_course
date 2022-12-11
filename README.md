@@ -35,7 +35,7 @@
 ![Title - Chrome 2022-12-11 오후 9_24_46](https://user-images.githubusercontent.com/99490528/206903592-4b351ded-1c83-4529-804d-5296e285b44a.png)
 
 
-* DB 등록 시 데이터 추가, 스키마 등록, 테이블 조회 이용할 수 있음(추후 DB 연결시에만 되도록 조정할 예정)
+* DB 등록 시 데이터 추가, 스키마 등록, 테이블 조회 이용할 수 있음
 
 ![Title - Chrome 2022-12-11 오후 9_26_04](https://user-images.githubusercontent.com/99490528/206903677-2bd493c3-5b7a-49bd-8d8b-d1ed84a528d9.png)
 
