@@ -4,7 +4,7 @@ import MySQLdb
 
 
 def main(request):
-    return render(request, "main.html")
+    return render(request, "main.html", {"is_db": request.session.get('host')})
 
 
 def search(request):
@@ -20,9 +20,9 @@ def search(request):
             return render(request, "search.html", {"data_set": [f"Table '{table_name}' doesn't exist"]})
         cur.execute(f"SELECT * FROM {table_name}")
         db.close()
-        return render(request, "search.html", {"data_set": cur.fetchall()})
+        return render(request, "search.html", {"data_set": cur.fetchall(), "is_db": request.session.get('host')})
     else:
-        return render(request, "search.html")
+        return render(request, "search.html", {"is_db": request.session.get('host')})
 
 
 def db(request):
@@ -31,7 +31,7 @@ def db(request):
     request.session['passwd'] = request.POST.get('passwd')
     request.session['db'] = request.POST.get('db')
 
-    return render(request, "db.html")
+    return render(request, "db.html", {"is_db": request.session.get('host')})
 
 
 def undb(request):
@@ -40,7 +40,7 @@ def undb(request):
     del request.session['passwd']
     del request.session['db']
 
-    return render(request, "undb.html")
+    return render(request, "undb.html", {"is_db": request.session.get('host')})
 
 
 def csv(request):
@@ -65,15 +65,10 @@ def csv(request):
                 sql += f"'{j}', "
             sql = sql[:-2] + "), "
         sql = sql[:-2] + ";"
-        # print(sql)
-        # cur.execute("""INSERT INTO `1_fitness_measurement`
-        # (`PHONE_NUM`, `MAIL_ADDR`, `TEST_CNT`, `CENTER_NM`, `AGE_GBN`, `TEST_GBN`,
-        # `TEST_AGE`, `INPUT_GBN`, `CERT_GBN`, `TEST_YMD`, `TEST_SEX`) VALUES
-        # ('015-0019-9010', '04e8jlwv1qa6mxqrz2a@comcast.com', '2', 'KSPO송파', '성인', '일반', '29', '없음', '3등급', '20210908', 'M');""")
         cur.execute(sql)
         db.commit()
         db.close()
-    return render(request, "csv.html")
+    return render(request, "csv.html", {"is_db": request.session.get('host')})
 
 
 def schema(request):
@@ -88,4 +83,4 @@ def schema(request):
         cur.execute(f"{table_schema}")
         db.commit()
         db.close()
-    return render(request, "schema.html")
+    return render(request, "schema.html", {"is_db": request.session.get('host')})
