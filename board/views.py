@@ -51,7 +51,7 @@ def csv(request):
                              db=request.session.get('db'))
 
         cur = db.cursor()
-        data = pd.read_csv(request.FILES['csv_file'], sep=',', header=None)
+        data = pd.read_csv(request.FILES['csv_file'], sep=',', header=None, keep_default_na=False)
         sql = "INSERT INTO `"
         sql += str(request.FILES['csv_file'])[0:-4] + "` ("
 
@@ -62,7 +62,10 @@ def csv(request):
         for i in range(1, len(temp)):
             sql += "("
             for j in temp[i]:
-                sql += f"'{j}', "
+                if j == "":
+                    sql += f"NULL, "
+                else:
+                    sql += f"'{j}', "
             sql = sql[:-2] + "), "
         sql = sql[:-2] + ";"
         cur.execute(sql)

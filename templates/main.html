@@ -5,13 +5,14 @@
     <title>Title</title>
 </head>
 <body>
-    <button><a href="{% url 'db' %}">DB 등록</a></button>
+    {% if is_db %}
+    <button><a href="{% url 'undb' %}">DB 해제</a></button>
     <button><a href="{% url 'csv' %}">데이터 추가</a></button>
     <button><a href="{% url 'schema' %}">스키마 등록</a></button>
     <button><a href="{% url 'search' %}">테이블 조회</a></button>
-    {% if is_db %}
     <h5 style="float: right; color:green">DB ON</h5>
     {% else %}
+    <button><a href="{% url 'db' %}">DB 등록</a></button>
     <h5 style="float: right; color:red">DB OFF</h5>
     {% endif %}
 </body>
