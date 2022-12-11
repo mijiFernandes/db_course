@@ -9,9 +9,9 @@
         <button><a href="{% url 'main' %}">메인으로</a></button>
     </div>
     <div>
-        <form action="{% url 'csv' %}" method="post">
+        <form enctype="multipart/form-data" action="{% url 'csv' %}" method="post">
             {% csrf_token %}
-            <input type="file" id="file" name="file" accept=".text/csv">
+            <input type="file" name="csv_file" accept=".csv">
             <input type="submit" value="등록">
         </form>
     </div>
