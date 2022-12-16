@@ -16,7 +16,7 @@
     </div>
     <h5>DB 등록</h5>
     <div>
-        <form action="{% url 'main' %}" method="post">
+        <form action="{% url 'db' %}" method="post">
             {% csrf_token %}
             <ul>
                 <li><input type="text" id="host" name="host"></li>
