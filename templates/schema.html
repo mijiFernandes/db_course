@@ -16,7 +16,14 @@
     <div>
         <form action="{% url 'schema' %}" method="post">
             {% csrf_token %}
-            <textarea name="schema" id="schema" rows="25"></textarea>
+            <br>
+            <div>
+                <input type="text" id="table_name" name="table_name">
+            </div>
+            <br>
+            <div>
+                <textarea name="schema" id="schema" rows="25" cols="50"></textarea>
+            </div>
             <input type="submit" value="등록">
         </form>
     </div>

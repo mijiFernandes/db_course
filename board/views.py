@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import pandas as pd
 import MySQLdb
+from .models import Table
 
 
 def main(request):
@@ -74,9 +75,48 @@ def csv(request):
     return render(request, "csv.html", {"is_db": request.session.get('host')})
 
 
+def list_to_scan(request):
+    table_list = Table.objects.order_by('table_name')
+    context = {"table_list": table_list, "is_db": request.session.get('host')}
+    return render(request, "scan_list.html", context)
+
+
+def list_to_modify(request):
+    table_list = Table.objects.order_by('table_name')
+    context = {"table_list": table_list, "is_db": request.session.get('host')}
+    return render(request, "modify_list.html", context)
+
+
+def detail(request, table_id):
+    table = Table.objects.get(id=table_id)
+    if request.method == "POST":
+        db = MySQLdb.connect(host=request.session.get('host'),
+                             user=request.session.get('user'),
+                             passwd=request.session.get('passwd'),
+                             db=request.session.get('db'))
+
+        cur = db.cursor()
+        cur.execute(f"desc {table.table_name};")
+
+        table.scan = True
+        table.save()
+
+        context = {'table': table, "is_db": request.session.get('host'), "structure": cur.fetchall()}
+        db.close()
+    else:
+        context = {'table': table, "is_db": request.session.get('host'), "structure": ""}
+
+    return render(request, 'table_detail.html', context)
+
+
 def schema(request):
     if request.method == "POST":
         table_schema = request.POST.get("schema")
+        table_name = request.POST.get("table_name")
+
+        t = Table(table_name=table_name)
+        t.save()
+
         db = MySQLdb.connect(host=request.session.get('host'),
                              user=request.session.get('user'),
                              passwd=request.session.get('passwd'),
