@@ -36,7 +36,19 @@ def db(request):
     request.session['passwd'] = request.POST.get('passwd')
     request.session['db'] = request.POST.get('db')
 
-    return render(request, "db.html", {"is_db": request.session.get('host')})
+    context = {"is_db": request.session.get('host'), "success":0}
+    try:
+        if request.method == "POST":
+            db = MySQLdb.connect(host=request.session.get('host'),
+                                user=request.session.get('user'),
+                                passwd=request.session.get('passwd'),
+                                db=request.session.get('db'))
+            db.close()
+            context['success'] = 1
+    except MySQLdb.Error as e:
+        context['success'] = -1
+
+    return render(request, "db.html", context)
 
 
 def undb(request):

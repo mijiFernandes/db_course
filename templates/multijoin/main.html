@@ -14,17 +14,17 @@
         <h5 style="float: right; color:red">DB OFF</h5>
         {% endif %}
     </div>
-    
+    {% if table_list %}
     <div>
         <form action="{% url 'multijoin' %}" method="post" id="table_name">
             {% csrf_token %}
             <div class="container my-3">
                 <select name="tables" id="tables">
                     <option value="">== 테이블 선택 ==</option>
-                    {% for tuples in data_set %}
-                        {% for data in tuples %}
-                            <option value={{data}}>{{data}}</option>
-                        {% endfor %}
+                    {% for table in table_list %}
+                        {% if table.scan %}
+                            <option value={{table.table_name}}>{{table.table_name}}</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>
@@ -32,5 +32,6 @@
             <input type="submit" value="검색">
         </form>
     </div>
+    {% endif %}
 </body>
 </html>

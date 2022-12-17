@@ -26,6 +26,11 @@
             </ul>
             <input type="submit" value="등록">
         </form>
+        {% if success == 1%}
+            <h5 style="color:green">DB Connected !</h5>
+        {% elif  success == -1%}
+            <h5 style="color:red">DB Connection Failed !</h5>
+        {% endif %}
     </div>
 </body>
 </html>
