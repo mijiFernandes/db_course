@@ -7,7 +7,7 @@
 <body>
     <div>
         <button><a href="{% url 'main' %}">메인으로</a></button>
-        {% if is_db %}
+        {% if login == 1 %}
         <button><a href="{% url 'undb' %}">DB 해제</a></button>
         <h5 style="float: right; color:green">DB ON</h5>
         {% else %}
@@ -26,9 +26,9 @@
             </ul>
             <input type="submit" value="등록">
         </form>
-        {% if success == 1%}
+        {% if login == 1%}
             <h5 style="color:green">DB Connected !</h5>
-        {% elif  success == -1%}
+        {% elif  login == -1%}
             <h5 style="color:red">DB Connection Failed !</h5>
         {% endif %}
     </div>

@@ -7,7 +7,7 @@
 <body>
     <div>
         <button><a href="{% url 'main' %}">메인으로</a></button>
-        {% if is_db %}
+        {% if login == 1 %}
         <h5 style="float: right; color:green">DB ON</h5>
         {% else %}
         <h5 style="float: right; color:red">DB OFF</h5>

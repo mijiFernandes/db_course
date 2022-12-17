@@ -4,9 +4,6 @@ import MySQLdb
 from .models import Table
 
 
-def main(request):
-    return render(request, "main.html", {"is_db": request.session.get('host')})
-
 
 def search(request):
     if request.method == "POST":
@@ -27,28 +24,34 @@ def search(request):
 
 
 def main(request):
-    return render(request, "main.html", {"is_db": request.session.get('host')})
+    return render(request, "index.html", 
+                  {"is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),})
 
 
 def db(request):
+    if (request.session.get('login')==1):
+        return render(request, "db.html", {"login":1})
     request.session['host'] = request.POST.get('host')
     request.session['user'] = request.POST.get('user')
     request.session['passwd'] = request.POST.get('passwd')
     request.session['db'] = request.POST.get('db')
-
-    context = {"is_db": request.session.get('host'), "success":0}
+    request.session['login'] = 0
     try:
         if request.method == "POST":
             db = MySQLdb.connect(host=request.session.get('host'),
                                 user=request.session.get('user'),
                                 passwd=request.session.get('passwd'),
                                 db=request.session.get('db'))
-            db.close()
-            context['success'] = 1
+            request.session['login'] = 1
+            db.close()  
     except MySQLdb.Error as e:
-        context['success'] = -1
+        request.session['login'] = -1
 
-    return render(request, "db.html", context)
+    return render(request, "db.html", {"login": request.session.get('login')})
 
 
 def undb(request):
@@ -56,8 +59,8 @@ def undb(request):
     del request.session['user']
     del request.session['passwd']
     del request.session['db']
-
-    return render(request, "undb.html", {"is_db": request.session.get('host')})
+    del request.session['login']
+    return render(request, "undb.html", {"login":0})
 
 
 def csv(request):
