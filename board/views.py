@@ -10,13 +10,17 @@ def main(request):
 def search(request):
     if request.method == "POST":
         table_name = request.POST.get('table')
-        db = MySQLdb.connect(host=request.session.get('host'),
-                             user=request.session.get('user'),
-                             passwd=request.session.get('passwd'),
-                             db=request.session.get('db'))
+        # db = MySQLdb.connect(host=request.session.get('host'),
+        #                      user=request.session.get('user'),
+        #                      passwd=request.session.get('passwd'),
+        #                      db=request.session.get('db'))
+        db = MySQLdb.connect(host='localhost',
+                             user='root',
+                             passwd='yewon1108!',
+                             db='db_final')
 
         cur = db.cursor()
-        if cur.execute(f"SHOW TABLES LIKE '{table_name}';") == 0:
+        if cur.execute(f"SHOW TABLES LIKE '{table_name}'") == 0:
             return render(request, "search.html", {"data_set": [f"Table '{table_name}' doesn't exist"]})
         cur.execute(f"SELECT * FROM {table_name}")
         db.close()
@@ -80,10 +84,12 @@ def schema(request):
         db = MySQLdb.connect(host=request.session.get('host'),
                              user=request.session.get('user'),
                              passwd=request.session.get('passwd'),
-                             db=request.session.get('db'))
-
+                             db='db_final')
+        #                     # At first, there's no explicit db name.
+        # dbname = request.session.get('db')
         cur = db.cursor()
+        # cur.execute(f"CREATE DATABASE {dbname}")
         cur.execute(f"{table_schema}")
-        db.commit()
+        # db.commit()
         db.close()
     return render(request, "schema.html", {"is_db": request.session.get('host')})
