@@ -7,14 +7,30 @@
  
  
 
-필요한 라이브러리 설치
 
+
+
+
+시작 및 환경설정
+
+1. "프로젝트용 폴더 하나 생성"하고 그 위에서 git clone하기
+```git clone https://github.com/mijiFernandes/db_course.git```
+
+
+2. 필요한 라이브러리 설치
 ```pip install -r requirements.txt```
 
-동작
+
+3. 마이그레이션 하기
+
+```cd db_course```
+
+```python manage.py migrate```     <== 아마 여기서 아래의 세션까지 다 진행됩니다.
 
 ```python manage.py migrate sessions```
 
+
+4. 로컬 서버 상에서 돌리기
 ```python manage.py runserver```
 
  
