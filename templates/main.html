@@ -9,8 +9,13 @@
     <button><a href="{% url 'undb' %}">DB 해제</a></button>
     <button><a href="{% url 'csv' %}">데이터 추가</a></button>
     <button><a href="{% url 'schema' %}">스키마 등록</a></button>
+<<<<<<< HEAD
     <button><a href="{% url 'search' %}">테이블 조회</a></button>
     <button><a href="{% url 'multijoin_main' %}">다중 결합</a></button>
+=======
+    <button><a href="{% url 'scan' %}">테이블 조회</a></button>
+    <button><a href="{% url 'modify' %}">테이블 수정</a></button>
+>>>>>>> mj
     <h5 style="float: right; color:green">DB ON</h5>
     {% else %}
     <button><a href="{% url 'db' %}">DB 등록</a></button>

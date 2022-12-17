@@ -4,6 +4,10 @@ import MySQLdb
 from .models import Table
 
 
+def main(request):
+    return render(request, "main.html", {"is_db": request.session.get('host')})
+
+
 def search(request):
     if request.method == "POST":
         table_name = request.POST.get('table')

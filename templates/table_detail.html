@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div>
+        <button><a href="{% url 'scan' %}">목록으로</a></button>
+        {% if is_db %}
+        <h5 style="float: right; color:green">DB ON</h5>
+        {% else %}
+        <h5 style="float: right; color:red">DB OFF</h5>
+        {% endif %}
+    </div>
+    <h1>{{ table.table_name }}</h1>
+    <br>
+    <div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="submit" value="스캔">
+        </form>
+    </div>
+    <br>
+    <br>
+    {% if structure %}
+    <div style="overflow:auto; width:auto; height:300px;">
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2">Field</th>
+                    <th colspan="2">Type</th>
+                    <th colspan="2">Null</th>
+                    <th colspan="2">Key</th>
+                    <th colspan="2">Default</th>
+                    <th colspan="2">Extra</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in structure %}
+                <tr>
+                    {% for col in row %}
+                    <td colspan="2" style="overflow:auto;">{{ col }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</body>
+</html>
