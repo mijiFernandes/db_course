@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Multi Join</title>
+</head>
+<body>
+    <button><a href="{% url 'multijoin_main' %}">이전으로</a></button>
+    <button><a href="{% url 'main' %}">메인으로</a></button>
+    <div>
+        <h5 style="color:green">선택한 테이블 : </h5>
+        <p> {{tablename}}</p>
+    </div>
+</body>
+</html>
