@@ -26,4 +26,5 @@ urlpatterns = [
     path('csv/', csv, name='csv'),
     path('schema/', schema, name='schema'),
     path('admin/', admin.site.urls),
+    path('multijoin/', include('multijoin.urls')),
 ]
