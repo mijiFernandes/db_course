@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Multi Join</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"/> 
+</head>
+<body>
+    <button><a href="{% url 'main' %}">메인으로</a></button>
+    <h5 style="color:green">다중결합을 위한 페이지입니다.</h5>
+    <table>
+        <thead>
+          <tr>
+            <th>Tables</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for tuples in total_tables %}
+                {% for data in tuples %}
+                    <tr><td>{{data}}</td></tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    <!-- <div>
+        <form action="{% url 'multijoin' %}" method="post" id="table_name">
+            {% csrf_token %}
+            <div class="container my-3">
+                <select name="tables" id="tables">
+                    <option value="">== 테이블 선택 ==</option>
+                    {% for tuples in data_set %}
+                        {% for data in tuples %}
+                            <option value={{data}}>{{data}}</option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <input type="submit" value="검색">
+        </form>
+    </div> -->
+</body>
+</html>

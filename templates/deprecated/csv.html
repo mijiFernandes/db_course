@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div>
+        <button><a href="{% url 'main' %}">메인으로</a></button>
+        {% if is_db %}
+        <h5 style="float: right; color:green">DB ON</h5>
+        {% else %}
+        <h5 style="float: right; color:red">DB OFF</h5>
+        {% endif %}
+    </div>
+    <div>
+        <form enctype="multipart/form-data" action="{% url 'csv' %}" method="post">
+            {% csrf_token %}
+            <input type="file" name="csv_file" accept=".csv">
+            <input type="submit" value="등록">
+        </form>
+    </div>
+</body>
+</html>

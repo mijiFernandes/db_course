@@ -1,36 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    <div>
-        <button><a href="{% url 'main' %}">메인으로</a></button>
-        {% if login == 1 %}
-        <button><a href="{% url 'undb' %}">DB 해제</a></button>
-        <h5 style="float: right; color:green">DB ON</h5>
-        {% else %}
-        <h5 style="float: right; color:red">DB OFF</h5>
-        {% endif %}
-    </div>
-    <h5>DB 등록</h5>
-    <div>
-        <form action="{% url 'db' %}" method="post">
-            {% csrf_token %}
-            <ul>
-                <li>host: <input type="text" id="host" name="host"></li>
-                <li>user: <input type="text" id="user" name="user"></li>
-                <li>passwd: <input type="password" id="passwd" name="passwd"></li>
-                <li>db: <input type="text" id="db" name="db"></li>
-            </ul>
-            <input type="submit" value="등록">
-        </form>
-        {% if login == 1%}
-            <h5 style="color:green">DB Connected !</h5>
-        {% elif  login == -1%}
-            <h5 style="color:red">DB Connection Failed !</h5>
-        {% endif %}
-    </div>
-</body>
-</html>
+{% extends 'index.html' %}
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mt-4">DB 연결</h2>
+    {% if login == 1 %}
+    <p class="mt-4">
+        이미 데이터베이스가 연결되어 있습니다.
+    </p>
+    <a class="nav-link" href="{% url 'undb' %}">DB 해제</a>
+                
+    {% else %}
+    <p class="mt-4">
+        데이터베이스 정보를 입력하세요.
+    </p>
+    <form action="{% url 'db' %}" method="post" id="frm">
+        {% csrf_token %}
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Host</label>
+            <div class="col-sm-10">
+              <input type="text" class="inp w-100" id="host" name="host" placeholder="localhost">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">User</label>
+            <div class="col-sm-10">
+                <input type="text" class="inp w-100" id="user" name="user" placeholder="root">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Password</label>
+            <div class="col-sm-10">
+              <input type="password" class="inp w-100" id="passwd" name="passwd" placeholder="Password">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">DB name</label>
+            <div class="col-sm-10">
+                <input type="text" class="inp w-100" id="db" name="db" placeholder="testDB">
+            </div>
+        </div>
+        <a class="nav-link" type="submit" id="connect">연결</a>
+        <!-- <input type="submit" value="연결" class="btn btn-secondary mb-5"> -->
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

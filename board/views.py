@@ -34,7 +34,11 @@ def main(request):
 
 def db(request):
     if (request.session.get('login')==1):
-        return render(request, "db.html", {"login":1})
+        return render(request, "db.html", {"is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),})
     request.session['host'] = request.POST.get('host')
     request.session['user'] = request.POST.get('user')
     request.session['passwd'] = request.POST.get('passwd')
@@ -50,8 +54,14 @@ def db(request):
             db.close()  
     except MySQLdb.Error as e:
         request.session['login'] = -1
+    # except TypeError as e:
+    #     request.session['login'] = -1
 
-    return render(request, "db.html", {"login": request.session.get('login')})
+    return render(request, "db.html", {"is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),})
 
 
 def undb(request):
@@ -91,7 +101,11 @@ def csv(request):
         cur.execute(sql)
         db.commit()
         db.close()
-    return render(request, "csv.html", {"is_db": request.session.get('host')})
+    return render(request, "csv.html", {"is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),})
 
 
 def list_to_scan(request):

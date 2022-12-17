@@ -22,14 +22,12 @@
         </script>
     </head>
     <body>
-        
         <div class="d-flex" id="wrapper">
             <!-- Sidebar-->
             <div class="border-end bg-white" id="sidebar-wrapper">
                 <div class="sidebar-heading border-bottom bg-light"><a href="{% url 'main' %}"><img src="{% static 'assets/logo_cs.png' %}" width="200"></a></div>
                 <div class="list-group list-group-flush">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'db' %}">DB 연결</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'csv' %}">CSV 추가</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">도메인 스캔</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">속성 편집</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">단일 결합</a>
@@ -57,23 +55,50 @@
                         </div>
                     </div>
                 </nav>
-                {% block content %}
                 <!-- Page content-->
                 <div class="container-fluid">
-                    <h3 class="mt-4">데이터 특성 스캔 프로그램</h2>
+                    <h3 class="mt-4">DB 연결</h2>
+                    {% if login == 1 %}
                     <p class="mt-4">
-                        2022-2학기 연세대학교 데이터베이스 수업 마지막 과제입니다. MySQL 기반의 RDBMS를 연동하여 속성을 스캔하고 이종 데이터간 결합 기능을 제공합니다. 
+                        이미 데이터베이스가 연결되어 있습니다.
                     </p>
-                    
-                    <h5 class="mt-4">조원</h5>
-                    <p>임예원 : 결합 대상 테이블 검색 기능, 다중결합 기능, DB 연결 및 확인 기능, 웹 클라이언트 디자인</p>
-                    <p>김명준 : DB 연결 및 확인 기능, 데이터 추가 기능</p>
-                    <p>김시열 : 단일결합 기능, DB 로그인 및 확인 기능</p>
-                    <p>이재욱 : 속성 편집 기능</p>
-                    <p>Kishen Ravi : 속성 스캔 기능</p>
-                    
+                    <a class="nav-link" href="{% url 'undb' %}">DB 해제</a>
+                                
+                    {% else %}
+                    <p class="mt-4">
+                        데이터베이스 정보를 입력하세요.
+                    </p>
+                    <form action="{% url 'db' %}" method="post" id="frm">
+                        {% csrf_token %}
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-2 col-form-label">Host</label>
+                            <div class="col-sm-10">
+                              <input type="text" class="inp w-100" id="host" name="host" placeholder="localhost">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">User</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="inp w-100" id="user" name="user" placeholder="root">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Password</label>
+                            <div class="col-sm-10">
+                              <input type="password" class="inp w-100" id="passwd" name="passwd" placeholder="Password">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">DB name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="inp w-100" id="db" name="db" placeholder="testDB">
+                            </div>
+                        </div>
+                        <a class="nav-link" type="submit" id="connect">연결</a>
+                        <!-- <input type="submit" value="연결" class="btn btn-secondary mb-5"> -->
+                    </form>
+                    {% endif %}
                 </div>
-                {% endblock %}
             </div>
         </div>
         <!-- Bootstrap core JS-->
