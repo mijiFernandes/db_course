@@ -128,6 +128,5 @@ def schema(request):
 
         cur = db.cursor()
         cur.execute(f"{table_schema}")
-        db.commit()
         db.close()
     return render(request, "schema.html", {"is_db": request.session.get('host')})

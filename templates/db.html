@@ -19,10 +19,10 @@
         <form action="{% url 'db' %}" method="post">
             {% csrf_token %}
             <ul>
-                <li><input type="text" id="host" name="host"></li>
-                <li><input type="text" id="user" name="user"></li>
-                <li><input type="password" id="passwd" name="passwd"></li>
-                <li><input type="text" id="db" name="db"></li>
+                <li>host: <input type="text" id="host" name="host"></li>
+                <li>user: <input type="text" id="user" name="user"></li>
+                <li>passwd: <input type="password" id="passwd" name="passwd"></li>
+                <li>db: <input type="text" id="db" name="db"></li>
             </ul>
             <input type="submit" value="등록">
         </form>
