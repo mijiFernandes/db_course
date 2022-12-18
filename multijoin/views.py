@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from board.models import Table
+from mysite.common_assets import STANDARD_KEYS, REPRESENTATIVE_PROPS
 import MySQLdb
 # Create your views here.
 
@@ -36,18 +36,19 @@ def multijoin_main(request):
     #     properties.append("금융정보")
     #     pks.append(feature)
     
+    
+
     # Representative property should be chosen before join
     cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_KEY AS
-                   select distinct c.table_name, c.column_name as RKEY from information_schema.columns as c  
-                   where table_name in 
-                        (select table_name from information_schema.tables where TABLE_SCHEMA='{request.session.get('db')}' and
-                         table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY'))
-                   and ORDINAL_POSITION=1""")
+                   select distinct c.table_name, "전화번호" as RKEY from information_schema.columns as c  
+                   where table_schema='{request.session.get('db')}' and 
+                    c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
+                """)
 
     # PK should be chosen before join
     cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_PROP AS
-                    select distinct c.table_name, "금융" as RPROP from information_schema.columns as c where table_schema='{request.session.get('db')}' and 
-                    c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY')
+                    select distinct c.table_name, "금융정보" as RPROP from information_schema.columns as c where table_schema='{request.session.get('db')}' and 
+                    c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
                 """)
     # Records count should be done in real-time before join
     cur.execute(f"""CREATE TABLE IF NOT EXISTS TABLE_COUNTS AS
@@ -64,15 +65,29 @@ def multijoin_main(request):
                     ON RP.table_name=TC.table_name
                 """)
 
+    if request.method == 'POST':
+        table_name = request.POST.get('table_name')
+        standard_key = request.POST.get('standard_key')
+        rprop = request.POST.get('rprop')
+        prop_name = request.POST.get('prop_name')
+
+        cur.execute(f"""SELECT * from JOINABLE_TABLES where table_name LIKE '%{table_name}%'
+                         and rkey LIKE '{standard_key}' 
+                         and rprop LIKE '{rprop}'""")
     # total_tables = list(zip(tables, counts, properties, pks))
-    cur.execute("SELECT * from JOINABLE_TABLES")
+    else:
+        cur.execute("SELECT * from JOINABLE_TABLES")
+    total_tables = cur.fetchall()
+
     db.close()
-    return render(request, 'multijoin/main.html', {"total_tables":cur.fetchall(),"is_db": request.session.get('host'),
+    return render(request, 'multijoin/main.html', {"total_tables":total_tables,"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
                     "passwd":request.session.get('passwd'),
                     "db":request.session.get('db'),
                     "login":request.session.get('login'),
-                    "port":request.session.get('port'),})
+                    "port":request.session.get('port'),
+                    "standard_keys":STANDARD_KEYS,
+                    "representative_props":REPRESENTATIVE_PROPS,})
 
 def multijoin(request):
     table_name= "None"

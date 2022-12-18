@@ -46,7 +46,7 @@ def db(request):
     request.session['user'] = request.POST.get('user')
     request.session['passwd'] = request.POST.get('passwd')
     request.session['db'] = request.POST.get('db')
-    request.session['port'] = int(request.POST.get('port')) if request.POST.get('port') is not None else None
+    request.session['port'] = int(request.POST.get('port')) if request.POST.get('port') is not None and request.POST.get('port') is not '' else None
     request.session['login'] = 0
     try:
         if request.method == "POST":
@@ -77,12 +77,13 @@ def db(request):
 
 
 def undb(request):
-    del request.session['host']
-    del request.session['user']
-    del request.session['passwd']
-    del request.session['db']
-    del request.session['login']
-    del request.session['port']
+    if request.session['login'] == 1:
+        del request.session['host']
+        del request.session['user']
+        del request.session['passwd']
+        del request.session['db']
+        request.session['login'] = 0
+        del request.session['port']
     return render(request, "undb.html", {"login":0})
 
 

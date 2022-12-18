@@ -12,7 +12,7 @@
     <p class="mt-4">
         데이터베이스 정보를 입력하세요.
     </p>
-    <form action="{% url 'db' %}" method="post" id="frm">
+    <form action="{% url 'db' %}" method="post" id="frm" class="w-50">
         {% csrf_token %}
         <div class="form-group row">
             <label for="staticEmail" class="col-sm-2 col-form-label">Host</label>
@@ -44,8 +44,9 @@
                 <input type="text" class="inp w-100" id="db" name="db" placeholder="testDB">
             </div>
         </div>
-        <a class="nav-link" type="submit" id="connect">연결</a>
+        <!-- <a class="nav-link" type="submit" id="connect">연결</a> -->
         <!-- <input type="submit" value="연결" class="btn btn-secondary mb-5"> -->
+        <button type="submit" class="btn btn-link">연결</button>
     </form>
     {% endif %}
 </div>

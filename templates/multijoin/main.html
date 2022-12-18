@@ -1,23 +1,63 @@
 {% extends 'index.html' %}
 {% block content %}
-<table class="table">
-    <thead>
-      <tr>
-        <th scope="col">테이블 명</th>
-        <th scope="col">레코드 수</th>
-        <th scope="col">대표 속성</th>
-        <th scope="col">대표 결합키</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for tuples in total_tables %}
-      <tr>
-      {% for data in tuples %}
-        <td>{{data}}</td>
+<div class="container-fluid">
+  <h4 class="mb-3 mt-5">다중 결합</h4>
+  <form class="form-inline mb-3" method="post" action="{% url 'multijoin_main' %}" >
+    {% csrf_token %}
+    <div class="input-group mb-2 mr-sm-2">
+      <div class="input-group-prepend">
+        <div class="input-group-text">테이블 명</div>
+      </div>
+      <input type="text" class="form-control" id="table_name" name="table_name" placeholder="TABLE NAME">
+    </div>
+    <div class="input-group mb-2 mr-sm-2">
+      <div class="input-group-prepend">
+        <div class="input-group-text">표준 결합키</div>
+      </div>
+      <select class="custom-select mr-sm-2" id="standard_key" name="standard_key">
+        <option selected>표준 결합키</option>
+        {% for key in standard_keys %}
+          <option value={{key}}>{{key}}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="input-group mb-2 mr-sm-2">
+      <div class="input-group-prepend">
+        <div class="input-group-text">대표 속성</div>
+      </div>
+      <select class="custom-select mr-sm-2" id="rprop" name="rprop">
+        <option selected>대표 속성</option>
+        {% for key in representative_props %}
+          <option value={{key}}>{{key}}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="input-group mb-2 mr-sm-2">
+      <div class="input-group-prepend">
+        <div class="input-group-text">속성명</div>
+      </div>
+      <input type="text" class="form-control" id="prop_name" name="prop_name" placeholder="PROPERTY">
+    </div>
+    <button type="submit" class="btn btn-link mb-2">검색</button>
+  </form>
+  <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">테이블 명</th>
+          <th scope="col">레코드 수</th>
+          <th scope="col">대표 속성</th>
+          <th scope="col">대표 결합키</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for tuples in total_tables %}
+        <tr>
+        {% for data in tuples %}
+          <td>{{data}}</td>
+        {% endfor %}
+        </tr>
       {% endfor %}
-      </tr>
-    {% endfor %}
-    </tbody>
+      </tbody>
   </table>
-
+</div>
 {% endblock %}
