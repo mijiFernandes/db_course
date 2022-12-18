@@ -6,13 +6,15 @@
 </head>
 <body>
     <div>
-        <button><a href="{% url 'scan' %}">목록으로</a></button>
+        <button><a href="{% url 'modify' %}">목록으로</a></button>
         {% if is_db %}
         <h5 style="float: right; color:green">DB ON</h5>
         {% else %}
         <h5 style="float: right; color:red">DB OFF</h5>
         {% endif %}
     </div>
+    <h1>{{ table.table_name }}</h1>
+    <button><a href="{% url 'table_delete' table.id  %}" style="text-decoration: none; color: inherit;">삭제</a></button>
     <br>
     <div>
         <form method="post">
@@ -29,6 +31,7 @@
                 <tr>
                     <th colspan="2">속성명</th>
                     <th colspan="2">데이터 타입</th>
+                    <th colspan="2">속성 삭제</th>
                     <th colspan="2">Null 레코드 수</th>
                     <th colspan="2">Null 레코드 비율</th>
                     <th colspan="2">결합키 후보</th>
@@ -38,9 +41,18 @@
             <tbody>
                 {% for row in numeric %}
                 <tr>
-                    {% for col in row %}
-                    <td colspan="2" style="overflow:auto;">{{ col }}</td>
-                    {% endfor %}
+                    <form action="{% url 'modify_detail' table.id %}" method="post">
+                        {% csrf_token %}
+                        {% for col in row %}
+                        <td colspan="2" style="overflow:auto;">{{ col }}</td>
+                        {% if forloop.counter0 == 0 %}
+                        <input type="hidden" name="attribute" value="{{ col }}">
+                        {% endif %}
+                        {% if forloop.counter0 == 1 %}
+                        <td colspan="2" style="overflow:auto;"><input type="submit" value="삭제"></td>
+                        {% endif %}
+                        {% endfor %}
+                    </form>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -57,18 +69,27 @@
                 <tr>
                     <th colspan="2">속성명</th>
                     <th colspan="2">데이터 타입</th>
+                    <th colspan="2">속성 삭제</th>
                     <th colspan="2">Null 레코드 수</th>
                     <th colspan="2">Null 레코드 비율</th>
                     <th colspan="2">결합키 후보</th>
-<!--                    <th colspan="2">Extra</th>-->
                 </tr>
             </thead>
             <tbody>
                 {% for row in categorical %}
                 <tr>
-                    {% for col in row %}
-                    <td colspan="2" style="overflow:auto;">{{ col }}</td>
-                    {% endfor %}
+                    <form action="{% url 'modify_detail' table.id %}" method="post">
+                        {% csrf_token %}
+                        {% for col in row %}
+                        <td colspan="2" style="overflow:auto;">{{ col }}</td>
+                        {% if forloop.counter0 == 0 %}
+                        <input type="hidden" name="attribute" value="{{ col }}">
+                        {% endif %}
+                        {% if forloop.counter0 == 1 %}
+                        <td colspan="2" style="overflow:auto;"><input type="submit" value="삭제"></td>
+                        {% endif %}
+                        {% endfor %}
+                    </form>
                 </tr>
                 {% endfor %}
             </tbody>
