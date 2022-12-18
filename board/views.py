@@ -51,11 +51,13 @@ def db(request):
                                 passwd=request.session.get('passwd'),
                                 db=request.session.get('db'))
             request.session['login'] = 1
+            if (not request.session.get('host') or not request.session.get('user') or not request.session.get('passwd') or not request.session.get('db')):
+                request.session['login'] = -1
             db.close()  
     except MySQLdb.Error as e:
         request.session['login'] = -1
-    # except TypeError as e:
-    #     request.session['login'] = -1
+    except TypeError as e:
+        request.session['login'] = -1
 
     return render(request, "db.html", {"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
