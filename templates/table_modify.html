@@ -16,13 +16,6 @@
     <h1>{{ table.table_name }}</h1>
     <button><a href="{% url 'table_delete' table.id  %}" style="text-decoration: none; color: inherit;">삭제</a></button>
     <br>
-    <div>
-        <form method="post">
-            {% csrf_token %}
-            <input type="submit" value="스캔">
-        </form>
-    </div>
-    <br>
     <br>
     {% if numeric %}
     <div style="overflow:auto; width:auto; height:auto;">
