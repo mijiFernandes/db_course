@@ -2,6 +2,7 @@
 {% block content %}
 <div class="container-fluid">
   <h4 class="mb-3 mt-5">다중 결합</h4>
+  <small id="Help" class="form-text text-muted mb-2">각 검색은 OR 연산으로 이루어집니다. 단, 속성명을 입력할 경우 해당 속성이 없는 테이블은 검색되지 않습니다.</small>
   <form class="form-inline mb-3" method="post" action="{% url 'multijoin_main' %}" >
     {% csrf_token %}
     <div class="input-group mb-2 mr-sm-2">

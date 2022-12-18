@@ -70,10 +70,28 @@ def multijoin_main(request):
         standard_key = request.POST.get('standard_key')
         rprop = request.POST.get('rprop')
         prop_name = request.POST.get('prop_name')
+        cur.execute(f"SELECT table_name from JOINABLE_TABLES where table_name LIKE '%{table_name}%'")
+        table_names = cur.fetchall()
+        tables = []
+        # search table which has property like 'prop_name'
+        for table in table_names:
+            table = table[0]
+            cur.execute(f"desc {table}")
+            desc = cur.fetchall()
+            for row in desc:
+                
+                if str(prop_name).lower() in str(row[0]).lower():
+                    tables.append("'"+table+"'")
+                    break
+        if len(tables) == 0:
+            tables.append("'1nNoNaMeSMaTcHeDn1'")
 
-        cur.execute(f"""SELECT * from JOINABLE_TABLES where table_name LIKE '%{table_name}%'
-                         and rkey LIKE '{standard_key}' 
-                         and rprop LIKE '{rprop}'""")
+        str_tables = '('+','.join(tables)+')'
+        cur.execute(f"""SELECT * from JOINABLE_TABLES where 
+                         (table_name LIKE '%{table_name}%' and table_name in {str_tables})
+                         or rkey LIKE '{standard_key}' 
+                         or rprop LIKE '{rprop}'
+                         """)
     # total_tables = list(zip(tables, counts, properties, pks))
     else:
         cur.execute("SELECT * from JOINABLE_TABLES")
