@@ -2963,6 +2963,22 @@ fieldset:disabled a.btn {
   box-shadow: none;
 }
 
+.btn-link-2 {
+  font-weight: 400;
+  color: #4776a9;
+  text-decoration: none;
+}
+
+.btn-link-2:hover {
+  color: #334964;
+  text-decoration: underline;
+}
+
+.btn-link-2:focus, .btn-link-2.focus {
+  text-decoration: underline;
+  box-shadow: none;
+}
+
 .btn-link:disabled, .btn-link.disabled {
   color: #6c757d;
   pointer-events: none;

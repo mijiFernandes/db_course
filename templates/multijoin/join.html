@@ -1,15 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Multi Join</title>
-</head>
-<body>
-    <button><a href="{% url 'multijoin_main' %}">이전으로</a></button>
-    <button><a href="{% url 'main' %}">메인으로</a></button>
-    <div>
-        <h5 style="color:green">선택한 테이블 : </h5>
-        <p> {{tablename}}</p>
-    </div>
-</body>
-</html>
+{% extends 'index.html' %}
+{% block content %}
+<div class="container-fluid">
+    <h4 class="mb-3 mt-5">다중 결합</h4>
+    <h6 class="mb-3 mt-3">선택한 테이블</h6>
+    
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">테이블 명</th>
+            <th scope="col">레코드 수</th>
+            <th scope="col">대표 속성</th>
+            <th scope="col">대표 결합키</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for tuples in chosen_tables %}
+          <tr>
+          {% for data in tuples %}
+            <td>{{data}}</td>
+          {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h6 class="mb-3 mt-5">결합 가능 테이블 목록</h6>
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">테이블 명</th>
+            <th scope="col">레코드 수</th>
+            <th scope="col">대표 속성</th>
+            <th scope="col">대표 결합키</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for tuples in total_tables %}
+          <tr>
+          {% for data in tuples %}
+            {% if forloop.first%}
+            <td><a href="{% url 'multijoin' data %}" class="btn btn-link-2">{{data}}</a></td>
+            {% else %}
+            <td>{{data}}</td>
+            {% endif %}
+          {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+  </div>
+{% endblock %}

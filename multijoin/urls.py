@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     path('', views.multijoin_main, name='multijoin_main'),
-    path('join/', views.multijoin, name='multijoin'),
+    path('<str:table_name>', views.multijoin, name='multijoin'),
 ]

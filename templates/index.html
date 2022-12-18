@@ -46,14 +46,14 @@
                         <!-- <button class="btn btn-primary" id="sidebarToggle">Hide Menu</button>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button> -->
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                            <ul class="navbar-nav mt-1 ms-auto mt-lg-0">
                                 {% if login != 1 %}
-                                <p style="color:rgb(223, 62, 113)" class="mt-2"> DB Not Connected</p>
+                                <p style="color:rgb(223, 62, 113)" class="mt-1 mb-1"> DB Not Connected</p>
                                 {% else %}
-                                <p style="color:darkgreen" class="mt-2"> Host: </p> &nbsp;<p class="mt-2">{{is_db}}</p>&nbsp; &nbsp; 
-                                <p style="color:darkgreen" class="mt-2"> User: </p> &nbsp;<p class="mt-2">{{user}}</p>&nbsp; &nbsp; 
-                                <p style="color:darkgreen" class="mt-2"> Port: </p> &nbsp;<p class="mt-2">{{port}}</p>&nbsp; &nbsp; 
-                                <p style="color:darkgreen" class="mt-2"> DB: </p> &nbsp;<p class="mt-2">{{db}}</p>&nbsp; &nbsp;  
+                                <p style="color:darkgreen" class="mt-1 mb-1"> Host: </p> &nbsp;<p class="mt-1 mb-1">{{is_db}}</p>&nbsp; &nbsp; 
+                                <p style="color:darkgreen" class="mt-1 mb-1"> User: </p> &nbsp;<p class="mt-1 mb-1">{{user}}</p>&nbsp; &nbsp; 
+                                <p style="color:darkgreen" class="mt-1 mb-1"> Port: </p> &nbsp;<p class="mt-1 mb-1">{{port}}</p>&nbsp; &nbsp; 
+                                <p style="color:darkgreen" class="mt-1 mb-1"> DB: </p> &nbsp;<p class="mt-1 mb-1">{{db}}</p>&nbsp; &nbsp;  
                                 {% endif %}
                             </ul>
                         </div>
