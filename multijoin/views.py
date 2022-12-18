@@ -5,9 +5,10 @@ import MySQLdb
 
 def multijoin_main(request):
     db = MySQLdb.connect(host=request.session.get('host'),
-                            user=request.session.get('user'),
-                            passwd=request.session.get('passwd'),
-                            db=request.session.get('db'))
+                                user=request.session.get('user'),
+                                passwd=request.session.get('passwd'),
+                                db=request.session.get('db'),
+                                port=request.session.get('port'),)
 
     cur = db.cursor()
     cur.execute(f"SHOW TABLES")
@@ -16,7 +17,8 @@ def multijoin_main(request):
                     "user": request.session.get('user'),
                     "passwd":request.session.get('passwd'),
                     "db":request.session.get('db'),
-                    "login":request.session.get('login'),})
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'),})
 
 def multijoin(request):
     table_name= "None"
