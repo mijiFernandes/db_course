@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 import pandas as pd
 import MySQLdb
-from .models import Table
 import json
 
 
@@ -28,11 +27,28 @@ def search(request):
 
 
 def db(request):
-    request.session['host'] = request.POST.get('host')
-    request.session['user'] = request.POST.get('user')
-    request.session['passwd'] = request.POST.get('passwd')
-    request.session['db'] = request.POST.get('db')
+    if request.method == "POST":
+        request.session['host'] = request.POST.get('host')
+        request.session['user'] = request.POST.get('user')
+        request.session['passwd'] = request.POST.get('passwd')
+        request.session['db'] = request.POST.get('db')
 
+        db = MySQLdb.connect(host=request.POST.get('host'),
+                             user=request.POST.get('user'),
+                             passwd=request.POST.get('passwd'),
+                             db=request.POST.get('db'))
+
+        cur = db.cursor()
+        cur.execute("""CREATE TABLE IF NOT EXISTS `TABLE_COUNTS` (
+        `ID` INT PRIMARY KEY auto_increment NOT NULL,
+        `TABLE_NAME` text COLLATE utf8_bin DEFAULT NULL,
+        `COUNTS` int(11) DEFAULT NULL,
+        `SCAN` boolean DEFAULT FALSE,
+        `KEY_LIST` text COLLATE utf8_bin DEFAULT NULL,
+        `ATTRIBUTES` text COLLATE utf8_bin DEFAULT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;""")
+
+        db.commit()
     return render(request, "db.html", {"is_db": request.session.get('host')})
 
 
@@ -58,6 +74,7 @@ def csv(request):
         temp = data.values
 
         table_name = str(request.FILES['csv_file'])[0:-4]
+
         sql = "CREATE TABLE IF NOT EXISTS `"
         sql += table_name + "` ("
 
@@ -99,71 +116,120 @@ def csv(request):
         for i in cur.fetchall():
             attributes.append(i[0])
 
-        t = Table(table_name=table_name, key_list=json.dumps(key_list),
-                  records=cur.execute(f"SELECT * FROM {table_name}"),
-                  attributes=attributes)
-        t.save()
+        sql = f"""INSERT INTO `TABLE_COUNTS` (`TABLE_NAME`, `COUNTS`, `SCAN`, `KEY_LIST`, `ATTRIBUTES`) VALUES (
+        '{table_name}', {cur.execute(f"SELECT * FROM {table_name}")}, '0', 
+        '{json.dumps(key_list)}', '{json.dumps(attributes)}');"""
+        cur.execute(sql)
+        db.commit()
         db.close()
 
     return render(request, "csv.html", {"is_db": request.session.get('host')})
 
 
 def list_to_scan(request):
-    table_list = Table.objects.order_by('table_name')
-    context = {"table_list": table_list, "is_db": request.session.get('host')}
-    return render(request, "scan_list.html", context)
-
-
-def list_to_modify(request):
-    table_list = Table.objects.order_by('table_name')
-    context = {"table_list": table_list, "is_db": request.session.get('host')}
-    return render(request, "modify_list.html", context)
-
-
-def table_delete(request, table_id):
-    table = Table.objects.get(id=table_id)
-
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
                          db=request.session.get('db'))
 
     cur = db.cursor()
-    cur.execute(f"DROP TABLE {table.table_name}")
+    sql = """SELECT * FROM `TABLE_COUNTS`"""
+    cur.execute(sql)
+    table_list = []
+    tables = cur.fetchall()
+    for table in tables:
+        table_list.append({"id": table[0],
+         "table_name": table[1],
+         "records": table[2],
+         "scan": table[3],
+         "key_list": table[4],
+         "attributes": table[5]})
+    context = {"table_list": table_list, "is_db": request.session.get('host')}
+    return render(request, "scan_list.html", context)
+
+
+def list_to_modify(request):
+    db = MySQLdb.connect(host=request.session.get('host'),
+                         user=request.session.get('user'),
+                         passwd=request.session.get('passwd'),
+                         db=request.session.get('db'))
+
+    cur = db.cursor()
+    sql = """SELECT * FROM `TABLE_COUNTS`"""
+    cur.execute(sql)
+    table_list = []
+    tables = cur.fetchall()
+    for table in tables:
+        table_list.append({"id": table[0],
+                           "table_name": table[1],
+                           "records": table[2],
+                           "scan": table[3],
+                           "key_list": table[4],
+                           "attributes": table[5]})
+    context = {"table_list": table_list, "is_db": request.session.get('host')}
+    return render(request, "modify_list.html", context)
+
+
+def table_delete(request, table_id):
+    db = MySQLdb.connect(host=request.session.get('host'),
+                         user=request.session.get('user'),
+                         passwd=request.session.get('passwd'),
+                         db=request.session.get('db'))
+
+    cur = db.cursor()
+    cur.execute(f"""SELECT * FROM TABLE_COUNTS 
+                    WHERE id={table_id}""")
+    temp = cur.fetchone()
+    table = {"id": temp[0],
+         "table_name": temp[1],
+         "records": temp[2],
+         "scan": temp[3],
+         "key_list": temp[4],
+         "attributes": temp[5]}
+    cur.execute(f"DROP TABLE {table['table_name']};")
+    cur.execute(f"DELETE FROM TABLE_COUNTS WHERE `id`={table_id};")
+    db.commit()
     db.close()
-    table.delete()
 
     return redirect('modify')
 
 
 def detail(request, table_id):
-    table = Table.objects.get(id=table_id)
-    key_list = json.decoder.JSONDecoder().decode(table.key_list)
+    db = MySQLdb.connect(host=request.session.get('host'),
+                         user=request.session.get('user'),
+                         passwd=request.session.get('passwd'),
+                         db=request.session.get('db'))
+
+    cur = db.cursor()
+    cur.execute(f"""SELECT * FROM TABLE_COUNTS 
+                    WHERE id={table_id}""")
+    temp = cur.fetchone()
+    table = {"id": temp[0],
+         "table_name": temp[1],
+         "records": temp[2],
+         "scan": temp[3],
+         "key_list": temp[4],
+         "attributes": temp[5]}
+    key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     if request.method == "POST":
         rows = []
 
-        db = MySQLdb.connect(host=request.session.get('host'),
-                             user=request.session.get('user'),
-                             passwd=request.session.get('passwd'),
-                             db=request.session.get('db'))
-
-        cur = db.cursor()
-        cur.execute(f"DESC {table.table_name}")
+        cur.execute(f"DESC {table['table_name']}")
         for i in cur.fetchall():
-            cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table.table_name}")
+            cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table['table_name']}")
             no_null = cur.fetchone()
-            row = [i[0], i[1], table.records - no_null[0],
-                   (table.records - no_null[0]) / table.records]
-            cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table.table_name}")
+            row = [i[0], i[1], table['records'] - no_null[0],
+                   (table['records'] - no_null[0]) / table['records']]
+            cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table['table_name']}")
             distinct = cur.fetchone()[0]
-            if distinct / table.records >= 0.9:
+            if distinct / table['records'] >= 0.9:
                 row.append("O")
             else:
                 row.append("X")
             rows.append(row)
 
-        table.scan = True
-        table.save()
+        cur.execute(f"""UPDATE TABLE_COUNTS SET `scan`='1' WHERE `id` = {table_id};""")
+        db.commit()
 
         numeric = []
         categorical = []
@@ -186,36 +252,40 @@ def detail(request, table_id):
 
 
 def modify(request, table_id):
-    table = Table.objects.get(id=table_id)
-    key_list = json.decoder.JSONDecoder().decode(table.key_list)
-    rows = []
-
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
                          db=request.session.get('db'))
 
     cur = db.cursor()
+    cur.execute(f"""SELECT * FROM TABLE_COUNTS 
+                    WHERE id={table_id}""")
+    temp = cur.fetchone()
+    table = {"id": temp[0],
+             "table_name": temp[1],
+             "records": temp[2],
+             "scan": temp[3],
+             "key_list": temp[4],
+             "attributes": temp[5]}
+    key_list = json.decoder.JSONDecoder().decode(table['key_list'])
+    rows = []
 
     if request.method == "POST":
-        cur.execute(f"ALTER TABLE {table.table_name} DROP COLUMN {request.POST.get('attribute')}")
+        cur.execute(f"ALTER TABLE {table['table_name']} DROP COLUMN {request.POST.get('attribute')}")
 
-    cur.execute(f"DESC {table.table_name}")
+    cur.execute(f"DESC {table['table_name']}")
     for i in cur.fetchall():
-        cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table.table_name}")
+        cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table['table_name']}")
         no_null = cur.fetchone()
-        row = [i[0], i[1], table.records - no_null[0],
-               (table.records - no_null[0]) / table.records]
-        cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table.table_name}")
+        row = [i[0], i[1], table['records'] - no_null[0],
+               (table['records'] - no_null[0]) / table['records']]
+        cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table['table_name']}")
         distinct = cur.fetchone()[0]
-        if distinct / table.records >= 0.9:
+        if distinct / table['records'] >= 0.9:
             row.append("O")
         else:
             row.append("X")
         rows.append(row)
-
-    table.scan = True
-    table.save()
 
     numeric = []
     categorical = []
