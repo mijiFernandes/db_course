@@ -52,6 +52,7 @@
                             <td colspan="2" style="overflow:auto;">
                                 <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
                                     <option value="{{ col }}">{{ col }}</option>
+                                    <option value="-">-</option>
                                     {% for key in key_list %}
                                     <option value="{{ key }}">{{ key }}</option>
                                     {% endfor %}
@@ -110,8 +111,9 @@
                             </td>
                         {% elif forloop.counter0 == 9 %}
                             <td colspan="2" style="overflow:auto;">
-                                <select style="text-align: center; width:60%" name="representative_key">
+                                <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
                                     <option value="{{ col }}">{{ col }}</option>
+                                    <option value="-">-</option>
                                     {% for key in key_list %}
                                     <option value="{{ key }}">{{ key }}</option>
                                     {% endfor %}

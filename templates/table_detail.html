@@ -14,12 +14,14 @@
         {% endif %}
     </div>
     <br>
+    {% if not table.scan %}
     <div>
         <form method="post">
             {% csrf_token %}
             <input type="submit" value="스캔">
         </form>
     </div>
+    {% endif %}
     <br>
     <br>
     {% if numeric %}

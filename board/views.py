@@ -136,8 +136,8 @@ def csv(request):
         sql = f"""INSERT INTO `TABLE_COUNTS` (`TABLE_NAME`, `COUNTS`, `SCAN`, `KEY_LIST`, `ATTRIBUTES`, 
         `REPRESENTATIVES`, `REPRESENTATIVE_KEY`) VALUES (
         '{table_name}', {cur.execute(f"SELECT * FROM {table_name}")}, '0', 
-        '{json.dumps(key_list, ensure_ascii=False)}', '{json.dumps(attributes)}',
-        '{json.dumps(representatives)}', '{json.dumps(representative_key)}');"""
+        '{json.dumps(key_list, ensure_ascii=False)}', '{json.dumps(attributes, ensure_ascii=False)}',
+        '{json.dumps(representatives, ensure_ascii=False)}', '{json.dumps(representative_key, ensure_ascii=False)}');"""
         cur.execute(sql)
         db.commit()
         db.close()
@@ -210,6 +210,7 @@ def table_delete(request, table_id):
          "attributes": temp[5]}
     cur.execute(f"DROP TABLE {table['table_name']};")
     cur.execute(f"DELETE FROM TABLE_COUNTS WHERE `id`={table_id};")
+    cur.execute(f"DELETE FROM representative_keys WHERE `TABLE_NAME`='{table['table_name']}';")
     db.commit()
     db.close()
 
@@ -238,7 +239,7 @@ def detail(request, table_id):
          "representatives": temp[6],
          "representative_key": temp[7]}
     key_list = json.decoder.JSONDecoder().decode(table['key_list'])
-    if request.method == "POST":
+    if request.method == "POST" or table["scan"]:
         rows = []
 
         cur.execute(f"DESC {table['table_name']}")
@@ -308,16 +309,18 @@ def detail(request, table_id):
             else:
                 row.append(representative_key[f"{i[0]}"])
 
-        representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
-        representative_key_str = '"' + str(representative_key) + '"'
+        if request.method == "POST":
+            representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
+            representative_key_str = '"' + str(representative_key) + '"'
 
-        sqlQuery = "INSERT INTO representative_keys VALUES (" + str(table["id"]) + ", '" + str(
-            table["table_name"]) + "', " + representative_key_str + ");"
+            sqlQuery = "INSERT INTO representative_keys VALUES (" + str(table["id"]) + ", '" + str(
+                table["table_name"]) + "', " + representative_key_str + ");"
 
-        cur.execute(sqlQuery)
+            cur.execute(sqlQuery)
 
-        cur.execute(f"""UPDATE TABLE_COUNTS SET `scan`='1' WHERE `id` = {table_id};""")
-        db.commit()
+            cur.execute(f"""UPDATE TABLE_COUNTS SET `scan`='1' WHERE `id` = {table_id};""")
+            db.commit()
+            table["scan"] = True
 
         numeric = []
         categorical = []
@@ -328,12 +331,11 @@ def detail(request, table_id):
             else:
                 categorical.append(row)
 
-        temp = cur.fetchall()
-
-        context = {'table': table, "is_db": request.session.get('host'), "structure": temp,
+        context = {'table': table, "is_db": request.session.get('host'),
                    "key_list": key_list, "numeric": numeric, "categorical": categorical}
         db.close()
     else:
+
         context = {'table': table, "is_db": request.session.get('host'), "structure": "", "key_list": key_list}
 
     return render(request, 'table_detail.html', context)
@@ -362,31 +364,6 @@ def modify(request, table_id):
              "representative_key": temp[7]}
     key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     rows = []
-
-    if request.method == "POST":
-        if request.POST.get('delete'):
-            cur.execute(f"ALTER TABLE {table['table_name']} DROP COLUMN {request.POST.get('delete')}")
-            temp = list(json.decoder.JSONDecoder().decode(table["attributes"]))
-            for attr in temp:
-                if attr == request.POST.get('delete'):
-                    temp.remove(request.POST.get('delete'))
-                    cur.execute(
-                        f"""UPDATE TABLE_COUNTS SET ATTRIBUTES = '{json.dumps(temp)}' WHERE id = {table["id"]};""")
-                    db.commit()
-                    break
-        # elif request.POST.get('num_edit'):
-        #     i = 0
-        #     for data in table[""]
-        #
-        #     for i in range(0, len(numeric)):
-        #         if not request.POST.get(str(i)) == "-":
-        #             representatives = dict(table["representatives"])
-        #     print(request.POST.get('edit'))
-        #     print(request.POST.get('representative_key0'))
-        #     print(request.POST.get('representative_key2'))
-        #     print(request.POST.get('representative_key3'))
-        #     print(request.POST.get('1'))
-        # else:
 
     cur.execute(f"DESC {table['table_name']}")
     for i in cur.fetchall():
@@ -460,9 +437,57 @@ def modify(request, table_id):
         else:
             categorical.append(row)
 
-    temp = cur.fetchall()
+    if request.method == "POST":
+        if request.POST.get('delete'):
+            cur.execute(f"ALTER TABLE {table['table_name']} DROP COLUMN {request.POST.get('delete')}")
+            temp = list(json.decoder.JSONDecoder().decode(table["attributes"]))
+            for attr in temp:
+                if attr == request.POST.get('delete'):
+                    temp.remove(request.POST.get('delete'))
+                    cur.execute(f"""UPDATE TABLE_COUNTS 
+                    SET ATTRIBUTES = '{json.dumps(temp, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                    db.commit()
+                    break
+        elif request.POST.get('num_edit'):
+            representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
+            representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+            for i in range(0, len(numeric)):
+                if not request.POST.get(str(i)):
+                    representatives[numeric[i][0]] = "-"
+                    numeric[i][9] = "-"
+                else:
+                    representatives[numeric[i][0]] = request.POST.get(str(i))
+                    numeric[i][9] = request.POST.get(str(i))
 
-    context = {'table': table, "is_db": request.session.get('host'), "structure": temp,
+                representative_key[numeric[i][0]] = request.POST.get(f"representative_key{i}")
+                numeric[i][11] = request.POST.get(f"representative_key{i}")
+
+                cur.execute(f"""UPDATE TABLE_COUNTS 
+                SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                cur.execute(f"""UPDATE TABLE_COUNTS 
+                SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                db.commit()
+        else:
+            representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
+            representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+            for i in range(0, len(categorical)):
+                if not request.POST.get(str(i)):
+                    representatives[categorical[i][0]] = "-"
+                    categorical[i][7] = "-"
+                else:
+                    representatives[categorical[i][0]] = request.POST.get(str(i))
+                    categorical[i][7] = request.POST.get(str(i))
+
+                representative_key[categorical[i][0]] = request.POST.get(f"representative_key{i}")
+                categorical[i][9] = request.POST.get(f"representative_key{i}")
+
+                cur.execute(f"""UPDATE TABLE_COUNTS 
+                SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                cur.execute(f"""UPDATE TABLE_COUNTS 
+                SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                db.commit()
+
+    context = {'table': table, "is_db": request.session.get('host'),
                "key_list": key_list, "numeric": numeric, "categorical": categorical}
     db.close()
     return render(request, 'table_modify.html', context)
