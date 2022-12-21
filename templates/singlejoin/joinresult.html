@@ -1,0 +1,26 @@
+{% extends 'index.html' %}
+{% block content %}
+    <div class='container-fluid'>
+  <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">테이블A</th>
+          <th scope="col">테이블A 레코드수</th>
+          <th scope="col">결합키 속성A</th>
+          <th scope="col">테이블B</th>
+            <th scope="col">테이블B 레코드수</th>
+            <th scope="col">결합키 속성B</th>
+            <th scope="col">대표 결합키</th>
+            <th scope="col">결과 레코드수</th>
+            <th scope="col">W1</th>
+            <th scope="col">W2</th>
+            <th scope="col">결합 진행상황</th>
+            <th scope="col">결합 테이블명</th>
+        </tr>
+      </thead>
+      <tbody>
+            <tr><chosen_table></chosen_table></tr>
+      </tbody>
+  </table>
+    </div>
+{% endblock %}

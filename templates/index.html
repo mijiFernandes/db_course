@@ -21,6 +21,12 @@
             };
            
         </script>
+
+        <style>
+            th, td {
+                border: 1px solid #444444;
+                }
+        </style>
     </head>
     <body>
         
@@ -33,7 +39,7 @@
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'csv' %}">CSV 추가</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">도메인 스캔</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">속성 편집</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">단일 결합</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'singlejoin_main' %}">단일 결합</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'multijoin_main' %}">다중 결합</a>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">결과 조회</a>
                 </div>
