@@ -1,5 +1,12 @@
 {% extends 'index.html' %}
 {% block content %}
+    <head>
+        <style>
+            th, td {
+            border: 1px solid #444444;
+            }
+        </style>
+    </head>
     <div class='container-fluid'>
   <table class="table">
       <thead>
@@ -19,7 +26,18 @@
         </tr>
       </thead>
       <tbody>
-            <tr><chosen_table></chosen_table></tr>
+            <tr>{{ table_1 }}</tr>
+            <tr>records</tr>
+            <tr>key</tr>
+            <tr>{{ table_2 }}</tr>
+            <tr>records</tr>
+            <tr>key</tr>
+            <tr>representative key</tr>
+            <tr>result record</tr>
+            <tr>w1</tr>
+            <tr>w2</tr>
+            <tr>progress</tr>
+            <tr>table name</tr>
       </tbody>
   </table>
     </div>
