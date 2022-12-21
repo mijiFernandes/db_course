@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="container-fluid">
+    <h4 class="mb-3 mt-5">단일 결합</h4>
+    <h6 class="mb-3 mt-3">선택한 테이블</h6>
+    
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">테이블 명</th>
+            <th scope="col">레코드 수</th>
+            <th scope="col">대표 속성</th>
+            <th scope="col">대표 결합키</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for tables in chosen_table_list %}
+        {% for tuples in tables %}
+          <tr>
+          {% for data in tuples %}
+            <td>{{data}}</td>
+          {% endfor %}
+          </tr>
+        {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'singlejoin_result' %}">결합</a>
+    <h6 class="mb-3 mt-5">결합 가능 테이블 목록</h6>
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">테이블 명</th>
+            <th scope="col">레코드 수</th>
+            <th scope="col">대표 속성</th>
+            <th scope="col">대표 결합키</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for tuples in total_tables %}
+          <tr>
+          {% for data in tuples %}
+            {% if forloop.first%}
+            <td><a href="{% url 'singlejoin' data %}" class="btn btn-link-2">{{data}}</a></td>
+            {% else %}
+            <td>{{data}}</td>
+            {% endif %}
+          {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+  </div>
+{% endblock %}
