@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 import pandas as pd
 import MySQLdb
 import json
+import re
 
 
 def main(request):
@@ -48,7 +49,9 @@ def db(request):
         `COUNTS` int(11) DEFAULT NULL,
         `SCAN` boolean DEFAULT FALSE,
         `KEY_LIST` text COLLATE utf8_bin DEFAULT NULL,
-        `ATTRIBUTES` text COLLATE utf8_bin DEFAULT NULL
+        `ATTRIBUTES` text COLLATE utf8_bin DEFAULT NULL,
+        `REPRESENTATIVES` text COLLATE utf8_bin DEFAULT NULL,
+        `REPRESENTATIVE_KEY` text COLLATE utf8_bin DEFAULT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;""")
 
         db.commit()
@@ -117,13 +120,19 @@ def csv(request):
         cur.execute(sql)
         db.commit()
 
+        representatives = {}
+        representative_key = {}
         cur.execute(f"DESC {table_name}")
         for i in cur.fetchall():
             attributes.append(i[0])
+            representatives[i[0]] = None
+            representative_key[i[0]] = None
 
-        sql = f"""INSERT INTO `TABLE_COUNTS` (`TABLE_NAME`, `COUNTS`, `SCAN`, `KEY_LIST`, `ATTRIBUTES`) VALUES (
+        sql = f"""INSERT INTO `TABLE_COUNTS` (`TABLE_NAME`, `COUNTS`, `SCAN`, `KEY_LIST`, `ATTRIBUTES`, 
+        `REPRESENTATIVES`, `REPRESENTATIVE_KEY`) VALUES (
         '{table_name}', {cur.execute(f"SELECT * FROM {table_name}")}, '0', 
-        '{json.dumps(key_list)}', '{json.dumps(attributes)}');"""
+        '{json.dumps(key_list)}', '{json.dumps(attributes)}',
+        '{json.dumps(representatives)}', '{json.dumps(representative_key)}');"""
         cur.execute(sql)
         db.commit()
         db.close()
@@ -210,37 +219,90 @@ def detail(request, table_id):
                          port=request.session.get('port'))
 
     cur = db.cursor()
+    regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
     cur.execute(f"""SELECT * FROM TABLE_COUNTS 
                     WHERE id={table_id}""")
     temp = cur.fetchone()
+
     table = {"id": temp[0],
          "table_name": temp[1],
          "records": temp[2],
          "scan": temp[3],
          "key_list": temp[4],
-         "attributes": temp[5]}
+         "attributes": temp[5],
+         "representatives": temp[6],
+         "representative_key": temp[7]}
     key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     if request.method == "POST":
         rows = []
-        # each row contains in this order
-        # numerics
-        # attribute, data_type, # of nulls, % of nulls, # of distincts, max, min, # of 0s, % of 0s, repre, pk, reprepk
-        # categorical
-        # attribute, data_type, # of nulls, % of nulls, # of distincts, # of spechar, % of spechar, repre, pk, reprepk
 
         cur.execute(f"DESC {table['table_name']}")
         for i in cur.fetchall():
             cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table['table_name']}")
             no_null = cur.fetchone()
             row = [i[0], i[1], table['records'] - no_null[0],
-                   (table['records'] - no_null[0]) / table['records']]
+                   float(round((table['records'] - no_null[0]) / table['records'], 8))]
+
+            # float(round((table['records'] - no_null[0] / table['records']), 8))
+
             cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table['table_name']}")
+
             distinct = cur.fetchone()[0]
+            row.append(distinct)
+
+            if "int" in row[1].lower():
+                cur.execute(f"SELECT MAX({i[0]}) AS maximum, MIN({i[0]}) AS minimum FROM {table['table_name']};")
+                maxMin = cur.fetchall()
+
+                # Append max and min values
+                row.append(maxMin[0][0])
+                row.append(maxMin[0][1])
+
+                cur.execute(f"SELECT COUNT(*) FROM {table['table_name']} WHERE {i[0]} = 0;")
+                zeroValue = cur.fetchall()
+
+                # Append zero value count
+                row.append(zeroValue[0][0])
+                row.append(float(round(zeroValue[0][0] / table['records'], 8)))
+
+            else:
+                count = 0
+                # Converts record to string. This is to ensure null values and numbers are parsed as strings
+                cur.execute(f"SELECT {i[0]} FROM {table['table_name']};")
+                colVal = list(cur.fetchall())
+                for j in colVal:
+                    # Converts record to string. This is to ensure null values and numbers are parsed as strings
+                    string = str(j[0])
+
+                    # Compare with regular expression
+                    result = re.search(regEx, string)
+
+                    # If found special character, increase count
+                    if result:
+                        count += 1
+                row.append(count)
+                row.append(float(round(count / table['records'], 8)))
+
+            representatives = dict(json.decoder.JSONDecoder().decode(table['representatives']))
+
+            if not representatives[f"{i[0]}"]:
+                row.append("-")
+            else:
+                row.append(representatives[f"{i[0]}"])
+
             if distinct / table['records'] >= 0.9:
                 row.append("O")
             else:
                 row.append("X")
             rows.append(row)
+
+            representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
+
+            if not representative_key[f"{i[0]}"]:
+                row.append("-")
+            else:
+                row.append(representative_key[f"{i[0]}"])
+
 
         cur.execute(f"""UPDATE TABLE_COUNTS SET `scan`='1' WHERE `id` = {table_id};""")
         db.commit()
@@ -275,18 +337,29 @@ def modify(request, table_id):
     cur = db.cursor()
     cur.execute(f"""SELECT * FROM TABLE_COUNTS 
                     WHERE id={table_id}""")
+
+    regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
     temp = cur.fetchone()
     table = {"id": temp[0],
              "table_name": temp[1],
              "records": temp[2],
              "scan": temp[3],
              "key_list": temp[4],
-             "attributes": temp[5]}
+             "attributes": temp[5],
+             "representatives": temp[6],
+             "representative_key": temp[7]}
     key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     rows = []
 
     if request.method == "POST":
         cur.execute(f"ALTER TABLE {table['table_name']} DROP COLUMN {request.POST.get('attribute')}")
+        temp = list(json.decoder.JSONDecoder().decode(table["attributes"]))
+        for attr in temp:
+            if attr == request.POST.get('attribute'):
+                temp.remove(request.POST.get('attribute'))
+                cur.execute(f"""UPDATE TABLE_COUNTS SET ATTRIBUTES = '{json.dumps(temp)}' WHERE id = {table["id"]};""")
+                db.commit()
+                break
 
     cur.execute(f"DESC {table['table_name']}")
     for i in cur.fetchall():
@@ -296,11 +369,60 @@ def modify(request, table_id):
                (table['records'] - no_null[0]) / table['records']]
         cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table['table_name']}")
         distinct = cur.fetchone()[0]
+        row.append(distinct)
+
+        if "int" in row[1].lower():
+            cur.execute(f"SELECT MAX({i[0]}) AS maximum, MIN({i[0]}) AS minimum FROM {table['table_name']};")
+            maxMin = cur.fetchall()
+
+            # Append max and min values
+            row.append(maxMin[0][0])
+            row.append(maxMin[0][1])
+
+            cur.execute(f"SELECT COUNT(*) FROM {table['table_name']} WHERE {i[0]} = 0;")
+            zeroValue = cur.fetchall()
+
+            # Append zero value count
+            row.append(zeroValue[0][0])
+            row.append(float(round(zeroValue[0][0] / table['records'], 8)))
+
+        else:
+            count = 0
+            # Converts record to string. This is to ensure null values and numbers are parsed as strings
+            cur.execute(f"SELECT {i[0]} FROM {table['table_name']};")
+            colVal = list(cur.fetchall())
+            for j in colVal:
+                # Converts record to string. This is to ensure null values and numbers are parsed as strings
+                string = str(j[0])
+
+                # Compare with regular expression
+                result = re.search(regEx, string)
+
+                # If found special character, increase count
+                if result:
+                    count += 1
+            row.append(count)
+            row.append(float(round(count / table['records'], 8)))
+
+        representatives = dict(json.decoder.JSONDecoder().decode(table['representatives']))
+
+        if not representatives[f"{i[0]}"]:
+            row.append("-")
+        else:
+            row.append(representatives[f"{i[0]}"])
+
         if distinct / table['records'] >= 0.9:
             row.append("O")
         else:
             row.append("X")
         rows.append(row)
+
+        representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
+
+        if not representative_key[f"{i[0]}"]:
+            row.append("-")
+        else:
+            row.append(representative_key[f"{i[0]}"])
 
     numeric = []
     categorical = []
