@@ -98,7 +98,7 @@ def singlejoin(request, table_name):
     cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE RKEY='{chosen_tables[0][3]}'")
     total_tables = cur.fetchall()
     db.close()
-    return render(request, 'singlejoin/joinresult.html',
+    return render(request, 'singlejoin/join.html',
                   {"tablename": table_name, "total_tables": total_tables, "is_db": request.session.get('host'),
                    "user": request.session.get('user'),
                    "passwd": request.session.get('passwd'),
@@ -108,5 +108,40 @@ def singlejoin(request, table_name):
                    "standard_keys": STANDARD_KEYS,
                    "chosen_tables": chosen_tables,
                    "representative_props": REPRESENTATIVE_PROPS, })
+
+def join(request, rkey, table_name1, table_name2):
+    if request.session.get('login') != -1:
+        db = MySQLdb.connect(host=request.session.get('host'),
+                            user=request.session.get('user'),
+                            passwd=request.session.get('passwd'),
+                            db=request.session.get('db'),
+                            port=request.session.get('port'),)
+
+        cur = db.cursor()
+        cur.execute(f"SELECT attributes FROM REPRESENTATIVE_KEY WHERE table_name='{table_name1}'")
+        prop1 = cur.fetchone()[0][rkey]
+
+        cur.execute(f"SELECT attributes FROM REPRESENTATIVE_KEY WHERE table_name='{table_name2}'")
+        prop2 = cur.fetchone()[0][rkey]
+
+        # Inner Join
+        cur.execute(f"""CREATE TABLE {table_name1}_{table_name2} AS 
+                        SELECT * FROM {table_name1} AS T1
+                        INNER JOIN ON {table_name2} AS T2
+                        WHERE T1.{prop1}=T2.{prop2}
+        """)
+        cur.execute(f"SELECT * FROM {table_name1}_{table_name2}")
+        joined_table = cur.fetchall()
+    else:
+        joined_table = None
+    return render(request, 'singlejoin.html', {"table_1":table_name1, "table_2":table_name2, "is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'),
+                    "standard_keys":STANDARD_KEYS,
+                    "joined_table":joined_table,
+                    "representative_props":REPRESENTATIVE_PROPS,})
 
 
