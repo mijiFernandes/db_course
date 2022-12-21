@@ -30,4 +30,5 @@ urlpatterns = [
     path('table_list/<int:table_id>/', detail),
     path('admin/', admin.site.urls),
     path('multijoin/', include('multijoin.urls')),
+    path('singlejoin/', include('singlejoin.urls'))
 ]
