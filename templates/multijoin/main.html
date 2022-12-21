@@ -41,6 +41,7 @@
     </div>
     <button type="submit" class="btn btn-link mb-2">검색</button>
   </form>
+  
   <table class="table">
       <thead>
         <tr>
@@ -51,18 +52,27 @@
         </tr>
       </thead>
       <tbody>
+
       {% for tuples in total_tables %}
-        <tr>
+        <tr><form method="post" action="{% url 'multijoin' %}">
+          {% csrf_token %}
         {% for data in tuples %}
           {% if forloop.first%}
-          <td><a href="{% url 'multijoin' data %}" class="btn btn-link-2">{{data}}</a></td>
+          <td><button class="btn btn-link-2" type="submit" name="table_name" value={{data}}>{{data}}</button></td>
+          {% elif forloop.last %}
+          <td><select class="custom-select mr-sm-2" id="rkey" name="rkey">
+            {% for key in data %}
+              <option value={{key}}>{{key}}</option>
+            {% endfor %}
+          </select></td>
           {% else %}
           <td>{{data}}</td>
           {% endif %}
         {% endfor %}
-        </tr>
+        </tr></form> 
       {% endfor %}
       </tbody>
   </table>
+  
 </div>
 {% endblock %}

@@ -17,7 +17,11 @@
         {% for tuples in chosen_tables %}
           <tr>
           {% for data in tuples %}
+            {% if forloop.last %}
+            <td>{{rkey}}</td>
+            {% else %}
             <td>{{data}}</td>
+            {% endif %}
           {% endfor %}
           </tr>
         {% endfor %}
@@ -38,7 +42,7 @@
           <tr>
           {% for data in tuples %}
             {% if forloop.first%}
-            <td><a href="{% url 'multijoin' data %}" class="btn btn-link-2">{{data}}</a></td>
+            <td><a href="{% url 'main' %}" class="btn btn-link-2">{{data}}</a></td>
             {% else %}
             <td>{{data}}</td>
             {% endif %}

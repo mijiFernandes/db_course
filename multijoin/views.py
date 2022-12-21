@@ -2,6 +2,7 @@ from django.shortcuts import render
 from mysite.common_assets import STANDARD_KEYS, REPRESENTATIVE_PROPS
 import MySQLdb
 from board.views import undb
+import json
 # Create your views here.
 
 def multijoin_main(request):
@@ -39,8 +40,9 @@ def multijoin_main(request):
         #     pks.append(feature)
         
         # Representative property should be chosen before join
+        dict_s = json.dumps({"전화번호":"PHONE_NUM", "이메일주소":"MAIL_ADDR"}, ensure_ascii=False)
         cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_KEY AS
-                    select distinct c.table_name, "전화번호" as RKEY from information_schema.columns as c  
+                    select distinct c.table_name, '{dict_s}' as RKEY from information_schema.columns as c  
                     where table_schema='{request.session.get('db')}' and 
                         c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
                     """)
@@ -95,8 +97,18 @@ def multijoin_main(request):
         # total_tables = list(zip(tables, counts, properties, pks))
         else:
             cur.execute("SELECT * from JOINABLE_TABLES")
-        total_tables = cur.fetchall()
-
+        total_tables = list(cur.fetchall())
+        for i in range(len(total_tables)):
+            # total_tables[i][3] : 'attributes' from REPRESENTATIVE_KEYS table
+            # is a dictionary which has representative key name as a key, and 
+            # a corresponding attribute as a value
+            total_tables[i] = list(total_tables[i])
+            strs = total_tables[i][3].replace("'", '"')
+           
+            out_dict = json.loads(strs)
+            
+            total_tables[i][3] = list(out_dict.keys())
+            
         db.close()
         return render(request, 'multijoin/main.html', {"total_tables":total_tables,"is_db": request.session.get('host'),
                         "user": request.session.get('user'),
@@ -107,33 +119,53 @@ def multijoin_main(request):
                         "standard_keys":STANDARD_KEYS,
                         "representative_props":REPRESENTATIVE_PROPS,})
     except TypeError:
-        return undb(request)
+        # return undb(request)
+        pass
 
-def multijoin(request, table_name):
+def multijoin(request):
     if request.session.get('login') != -1:
         db = MySQLdb.connect(host=request.session.get('host'),
                             user=request.session.get('user'),
                             passwd=request.session.get('passwd'),
                             db=request.session.get('db'),
                             port=request.session.get('port'),)
-
+        table_name="Not selected"
+        rkey = "No key"
+        if request.method == 'POST':
+            table_name = request.POST.get('table_name')
+            rkey = request.POST.get('rkey')
+            
         cur = db.cursor()
         cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
         
         chosen_tables = cur.fetchall()
         cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE RKEY='{chosen_tables[0][3]}' and table_name != '{table_name}'")
-        total_tables = cur.fetchall()
+        total_tables = list(cur.fetchall())
+        filtered_tables = []
+        for i in range(len(total_tables)):
+            # total_tables[i][3] : 'attributes' from REPRESENTATIVE_KEYS table
+            # is a dictionary which has representative key name as a key, and 
+            # a corresponding attribute as a value
+            total_tables[i] = list(total_tables[i])
+            strs = total_tables[i][3].replace("'", '"')
+           
+            out_dict = json.loads(strs)
+            if rkey not in out_dict.keys():
+                continue
+            total_tables[i][3] = rkey
+            filtered_tables.append(total_tables[i])
         db.close()
 
-    return render(request, 'multijoin/join.html', {"tablename":table_name,"total_tables":total_tables,"is_db": request.session.get('host'),
+    return render(request, 'multijoin/join.html', {"tablename":table_name,"total_tables":filtered_tables,"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
                     "passwd":request.session.get('passwd'),
                     "db":request.session.get('db'),
                     "login":request.session.get('login'),
                     "port":request.session.get('port'),
-                    "standard_keys":STANDARD_KEYS,
+                    
                     "chosen_tables":chosen_tables,
-                    "representative_props":REPRESENTATIVE_PROPS,})
+                    "rkey":rkey,
+                    })
 
 
 def join(request, rkey, table_name1, table_name2):
