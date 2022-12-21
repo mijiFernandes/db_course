@@ -28,9 +28,11 @@
         </tbody>
     </table>
     <h6 class="mb-3 mt-5">결합 가능 테이블 목록</h6>
+    <form method="post" action="{% url 'multijoin_start' %}">{% csrf_token %}
     <table class="table">
         <thead>
           <tr>
+            <th scope="col">선택</th>
             <th scope="col">테이블 명</th>
             <th scope="col">레코드 수</th>
             <th scope="col">대표 속성</th>
@@ -40,16 +42,18 @@
         <tbody>
         {% for tuples in total_tables %}
           <tr>
-          {% for data in tuples %}
-            {% if forloop.first%}
-            <td><a href="{% url 'main' %}" class="btn btn-link-2">{{data}}</a></td>
+          {% for data in tuples %} 
+            {% if forloop.first %}
+            <td><input class="check-input" type="checkbox" value="" name={{forloop.parentloop.counter}}></td>  
             {% else %}
             <td>{{data}}</td>
             {% endif %}
           {% endfor %}
           </tr>
         {% endfor %}
-        </tbody>
+        </tbody> 
     </table>
+    <button type="submit" class="btn btn-link mb-2">결합 시작</button>
+    </form>
   </div>
 {% endblock %}
