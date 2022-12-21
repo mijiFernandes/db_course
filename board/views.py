@@ -11,10 +11,11 @@ def main(request):
 def search(request):
     if request.method == "POST":
         table_name = request.POST.get('table')
-        db = MySQLdb.connect(host=request.session.get('host'),
-                             user=request.session.get('user'),
-                             passwd=request.session.get('passwd'),
-                             db=request.session.get('db'))
+        db = MySQLdb.connect(host=request.POST.get('host'),
+                             user=request.POST.get('user'),
+                             passwd=request.POST.get('passwd'),
+                             db=request.POST.get('db'),
+                             port=request.POST.get('port'))
 
         cur = db.cursor()
         if cur.execute(f"SHOW TABLES LIKE '{table_name}';") == 0:
@@ -32,11 +33,13 @@ def db(request):
         request.session['user'] = request.POST.get('user')
         request.session['passwd'] = request.POST.get('passwd')
         request.session['db'] = request.POST.get('db')
+        request.session['port'] = int(request.POST.get('port'))
 
         db = MySQLdb.connect(host=request.POST.get('host'),
                              user=request.POST.get('user'),
                              passwd=request.POST.get('passwd'),
-                             db=request.POST.get('db'))
+                             db=request.POST.get('db'),
+                             port=int(request.POST.get('port')))
 
         cur = db.cursor()
         cur.execute("""CREATE TABLE IF NOT EXISTS `TABLE_COUNTS` (
@@ -57,6 +60,7 @@ def undb(request):
     del request.session['user']
     del request.session['passwd']
     del request.session['db']
+    del request.session['port']
 
     return render(request, "undb.html", {"is_db": request.session.get('host')})
 
@@ -66,7 +70,8 @@ def csv(request):
         db = MySQLdb.connect(host=request.session.get('host'),
                              user=request.session.get('user'),
                              passwd=request.session.get('passwd'),
-                             db=request.session.get('db'))
+                             db=request.session.get('db'),
+                             port=request.session.get('port'))
 
         cur = db.cursor()
         data = pd.read_csv(request.FILES['csv_file'], sep=',', header=None, keep_default_na=False)
@@ -130,7 +135,8 @@ def list_to_scan(request):
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
-                         db=request.session.get('db'))
+                         db=request.session.get('db'),
+                         port=int(request.session.get('port')))
 
     cur = db.cursor()
     sql = """SELECT * FROM `TABLE_COUNTS`"""
@@ -152,7 +158,8 @@ def list_to_modify(request):
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
-                         db=request.session.get('db'))
+                         db=request.session.get('db'),
+                         port=request.session.get('port'))
 
     cur = db.cursor()
     sql = """SELECT * FROM `TABLE_COUNTS`"""
@@ -174,7 +181,8 @@ def table_delete(request, table_id):
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
-                         db=request.session.get('db'))
+                         db=request.session.get('db'),
+                         port=request.session.get('port'))
 
     cur = db.cursor()
     cur.execute(f"""SELECT * FROM TABLE_COUNTS 
@@ -198,7 +206,8 @@ def detail(request, table_id):
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
-                         db=request.session.get('db'))
+                         db=request.session.get('db'),
+                         port=request.session.get('port'))
 
     cur = db.cursor()
     cur.execute(f"""SELECT * FROM TABLE_COUNTS 
@@ -213,6 +222,11 @@ def detail(request, table_id):
     key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     if request.method == "POST":
         rows = []
+        # each row contains in this order
+        # numerics
+        # attribute, data_type, # of nulls, % of nulls, # of distincts, max, min, # of 0s, % of 0s, repre, pk, reprepk
+        # categorical
+        # attribute, data_type, # of nulls, % of nulls, # of distincts, # of spechar, % of spechar, repre, pk, reprepk
 
         cur.execute(f"DESC {table['table_name']}")
         for i in cur.fetchall():
@@ -255,7 +269,8 @@ def modify(request, table_id):
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
                          passwd=request.session.get('passwd'),
-                         db=request.session.get('db'))
+                         db=request.session.get('db'),
+                         port=request.session.get('port'))
 
     cur = db.cursor()
     cur.execute(f"""SELECT * FROM TABLE_COUNTS 
