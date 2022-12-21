@@ -1,65 +1,18 @@
 # db_course
 
-**파이썬 가상환경 설치하고 진행하는 것을 추천합니다**
-
-**HeidiSQL로 연습용 DB 하나 생성해주고 걔를 연결해주면 됩니다**
- 
- 
- 
+22/12/20 12:30 시점 Django model 없이 Raw SQL로 전부 대체
 
 
+**DB 등록 시에 TABLE_COUNTS라는 전체 테이블 관리 테이블 생성
+
+![슬라이드6](https://user-images.githubusercontent.com/99490528/208578085-f17fd575-f947-4037-ba15-3214c630985c.PNG)
 
 
+**CSV 파일 업로드 시에 해당 CSV파일 정보를 바탕으로 한 테이블 생성 후 TABLE_COUNTS 테이블에도 필요 정보 등록
 
-시작 및 환경설정
-
-1. "프로젝트용 폴더 하나 생성"하고 그 위에서 git clone하기
-```git clone https://github.com/mijiFernandes/db_course.git```
+![슬라이드7](https://user-images.githubusercontent.com/99490528/208578160-fedfc037-8d41-4198-842a-1f8f3c824095.PNG)
 
 
-2. 필요한 라이브러리 설치
-```pip install -r requirements.txt```
+**현재 전체적인 동작과정
 
-
-3. 마이그레이션 하기
-
-```cd db_course```
-
-```python manage.py migrate```     <== 아마 여기서 아래의 세션까지 다 진행됩니다.
-
-```python manage.py migrate sessions```
-
-
-4. 로컬 서버 상에서 돌리기
-```python manage.py runserver```
-
- 
- 
-
-* 메인화면 (DB 연결은 우측의 DB ON/OFF로 확인할 수 있음)
-
-![Title - Chrome 2022-12-11 오후 9_24_13](https://user-images.githubusercontent.com/99490528/206903466-439ce355-8e9e-4b7a-a15c-8605726e13db.png)
-
-
-* DB 등록 화면
-
-![Title - Chrome 2022-12-11 오후 9_24_34](https://user-images.githubusercontent.com/99490528/206903565-0e4202f1-e64a-4d46-94f3-f9f06b4ceaac.png)
-
-
-* DB 등록 완료
-
-![Title - Chrome 2022-12-11 오후 9_24_46](https://user-images.githubusercontent.com/99490528/206903592-4b351ded-1c83-4529-804d-5296e285b44a.png)
-
-
-* DB 등록 시 데이터 추가, 스키마 등록, 테이블 조회 이용할 수 있음
-
-![Title - Chrome 2022-12-11 오후 9_26_04](https://user-images.githubusercontent.com/99490528/206903677-2bd493c3-5b7a-49bd-8d8b-d1ed84a528d9.png)
-
-
-* DB 연결 해제
-
-![Title - Chrome 2022-12-11 오후 9_26_30](https://user-images.githubusercontent.com/99490528/206903689-90a6c2cd-2d9c-4b4f-b2f2-7c4211a597c0.png)
-
-
-
-
+![슬라이드8](https://user-images.githubusercontent.com/99490528/208578318-1127e2e3-fffb-4feb-a0b1-1cdad26f55b2.PNG)
