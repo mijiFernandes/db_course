@@ -222,7 +222,24 @@ def join(request):
         basetable = list(cur.fetchall()[0])
         success = True
 
-        
+        # Join result table
+        cur.execute(f"""CREATE TABLE IF NOT EXISTS MULTI_JOIN_RESULTS 
+                        (BASE_TABLE_NAME text,
+                         BASE_TABLE_N_RECORDS int(11),
+                         BASE_KEY_PROP text,
+
+                         JOIN_TABLE_N_RECORDS int(11),
+                         JOIN_KEY_PROP text,
+                        
+                         RKEY text,
+                         JOINED_N_RECORDS int(11),
+                         W1 double,
+                         W2 double,
+                         STATUS text,
+                         JOINED_NAME text
+                        )
+        """)
+        db.commit()
         for join_table_name in table_list:
             key_dict = json.loads(basetable[3].replace("'", '"'))
             base_key_prop = ''
@@ -242,7 +259,9 @@ def join(request):
                 raise ValueError("Join key property should not be None")
             # Inner Join
             try:
+            # if True:
                 msg=f"T1 prop: {base_key_prop} T2 prop: {join_key_prop}\n"
+                msg+= f"base name: {table_name}, join name: {join_table_name}\n"
                 cur.execute(f"DESC {table_name}")
                 base_columns = [f"T1.{col} AS base_{col}" for col in list(np.array(cur.fetchall())[:, 0])]
                 base_columns_sql = ','.join(base_columns)
@@ -251,20 +270,57 @@ def join(request):
                 join_columns = [f"T2.{col} AS join_{col}" for col in list(np.array(cur.fetchall())[:, 0])]
                 join_columns_sql = ','.join(join_columns)
 
-                cur.execute(f"DROP TABLE IF EXISTS {table_name}_{join_table_name}")
-                cur.execute(f"""CREATE TABLE {table_name}_{join_table_name} AS 
+                cur.execute(f"DROP TABLE IF EXISTS {table_name[:5]}_{join_table_name[:5]}")
+                cur.execute(f"""CREATE TABLE {table_name[:5]}_{join_table_name[:5]} AS 
                                 SELECT {base_columns_sql}, {join_columns_sql} FROM {table_name} AS T1
                                 INNER JOIN {join_table_name} AS T2
                                 ON T1.{base_key_prop}=T2.{join_key_prop}
                 """)
-                
-            # cur.execute(f"SELECT * FROM {table_name}_{join_table_name}")
-            # joined_table = cur.fetchall()
-            # joined_tables.append(joined_table)
+                db.commit()
+                cur.execute(f"SELECT COUNT(*) FROM {table_name[:5]}_{join_table_name[:5]}")
+                join_result_count = int(cur.fetchone()[0])
+
+                cur.execute(f"SELECT COUNTS FROM TABLE_COUNTS WHERE table_name='{table_name}'")
+                base_count = int(cur.fetchone()[0])
+
+                cur.execute(f"SELECT COUNTS FROM TABLE_COUNTS WHERE table_name='{join_table_name}'")
+                join_count = int(cur.fetchone()[0])
+                cur.execute(f"""INSERT INTO MULTI_JOIN_RESULTS (
+                                    BASE_TABLE_NAME,
+                                    BASE_TABLE_N_RECORDS,
+                                    BASE_KEY_PROP,
+                                    JOIN_TABLE_N_RECORDS,
+                                    JOIN_KEY_PROP,
+                                    RKEY,
+                                    JOINED_N_RECORDS,
+                                    W1,
+                                    W2,
+                                    STATUS,
+                                    JOINED_NAME
+                                )
+                                VALUES (
+                                    '{table_name}',
+                                    '{base_count}',
+                                    '{base_key_prop}',
+                                    '{join_count}',
+                                    '{join_key_prop}',
+                                    '{rkey}',
+                                    '{join_result_count}',
+                                    '{join_result_count/base_count}',
+                                    '{join_result_count/join_count}',
+                                    "결합완료",
+                                    '{table_name[:5]}_{join_table_name[:5]}'
+                                )
+                """)
+                db.commit()
             except MySQLdb.Error as e:
                 success=False
                 msg += str(e)
-
+        
+            
+            
+            
+       
     return render(request, 'multijoin/result.html', {"tablename":table_name,"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
                     "passwd":request.session.get('passwd'),
