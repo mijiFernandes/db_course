@@ -1,9 +1,10 @@
 {% extends 'index.html' %}
 {% block content %}
 <div class="container-fluid">
-    <h4 class="mb-3 mt-5">단일 결합</h4>
+    <h4 class="mb-3 mt-5">다중 결합</h4>
     <h6 class="mb-3 mt-3">선택한 테이블</h6>
-    
+    <form method="post" action="{% url 'join_process' %}">{% csrf_token %}
+
     <table class="table">
         <thead>
           <tr>
@@ -14,22 +15,28 @@
           </tr>
         </thead>
         <tbody>
-        {% for tables in chosen_table_list %}
-        {% for tuples in tables %}
+        {% for tuples in chosen_tables %}
           <tr>
           {% for data in tuples %}
+            {% if forloop.last %}
+            <td>{{rkey}}</td>
+            <input type="hidden" name="rkey" value={{rkey}}>
+            {% elif forloop.first %}
             <td>{{data}}</td>
+            <input type="hidden" name="table_name" value={{data}}>
+            {% else %}
+            <td>{{data}}</td>
+            {% endif %}
           {% endfor %}
           </tr>
         {% endfor %}
-        {% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'singlejoin_result' %}">결합</a>
     <h6 class="mb-3 mt-5">결합 가능 테이블 목록</h6>
     <table class="table">
         <thead>
           <tr>
+            <th scope="col">선택</th>
             <th scope="col">테이블 명</th>
             <th scope="col">레코드 수</th>
             <th scope="col">대표 속성</th>
@@ -39,16 +46,22 @@
         <tbody>
         {% for tuples in total_tables %}
           <tr>
+
           {% for data in tuples %}
-            {% if forloop.first%}
-            <td><a href="{% url 'singlejoin' data %}" class="btn btn-link">{{data}}</a></td>
+            {% if forloop.first %}
+              <td><input class="check-input" type="checkbox" value={{data}} name="join[]"></td>
+              <td>{{data}}</td>
             {% else %}
-            <td>{{data}}</td>
+              <td>{{data}}</td>
             {% endif %}
           {% endfor %}
           </tr>
         {% endfor %}
         </tbody>
     </table>
+
+    <button type="submit" class="btn btn-link mb-2" onclick="location.href='join_process'">결합 시작</button>
+    </form>
   </div>
+  <code>{{table_list}}</code>
 {% endblock %}

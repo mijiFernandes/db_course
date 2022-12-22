@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.singlejoin_main, name='singlejoin_main'),
-    path('joinresult/', views.join, name='singlejoin_result'),
-    path('<str:table_name>', views.singlejoin, name='singlejoin'),
-
+    path('process/', views.join, name='join_process'),
+    path('search/', views.singlejoin, name='singlejoin'),
+    path('joinresult/', views.do_join, name='join_result')
 ]

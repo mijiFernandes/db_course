@@ -2,6 +2,7 @@ from django.shortcuts import render
 from mysite.common_assets import STANDARD_KEYS, REPRESENTATIVE_PROPS
 import MySQLdb
 from board.views import undb
+import json
 
 # Create your views here.
 
@@ -71,8 +72,19 @@ def singlejoin_main(request):
                             """)
         else:
             cur.execute("SELECT * from JOINABLE_TABLES")
-        total_tables = cur.fetchall()
+        total_tables = list(cur.fetchall())
+        print(total_tables)
 
+        for i in range(len(total_tables)):
+            # total_tables[i][3] : 'attributes' from REPRESENTATIVE_KEYS table
+            # is a dictionary which has representative key name as a key, and
+            # a corresponding attribute as a value
+            total_tables[i] = list(total_tables[i])
+            strs = total_tables[i][3].replace("'", '"')
+
+            out_dict = json.loads(strs)
+
+            total_tables[i][3] = list(out_dict.keys())
         db.close()
         return render(request, 'singlejoin/main.html', {"total_tables": total_tables, "is_db": request.session.get('host'),
                                                     "user": request.session.get('user'),
@@ -85,77 +97,79 @@ def singlejoin_main(request):
     except TypeError:
         return undb(request)
 
-def singlejoin(request, table_name, chosen_table_list=chosen_table_list):
-    db = MySQLdb.connect(host=request.session.get('host'),
-                         user=request.session.get('user'),
-                         passwd=request.session.get('passwd'),
-                         db=request.session.get('db'),
-                         port=request.session.get('port'), )
+def singlejoin(request):
+    if request.session.get('login') != -1:
+        db = MySQLdb.connect(host=request.session.get('host'),
+                             user=request.session.get('user'),
+                             passwd=request.session.get('passwd'),
+                             db=request.session.get('db'),
+                             port=request.session.get('port'), )
+        table_name = "Not selected"
+        rkey = "No key"
+        if request.method == 'POST':
+            table_name = request.POST.get('table_name')
+            rkey = request.POST.get('rkey')
 
-    is_full = False
-    cur = db.cursor()
-    cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
+        cur = db.cursor()
+        cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
 
-    chosen_tables = cur.fetchall()
-    if len(chosen_table_list) < 2:
-        chosen_table_list.append(chosen_tables)
-    else:
-        is_full = True
-        chosen_table_list.clear()
+        chosen_tables = cur.fetchall()
+        cur.execute(
+            f"SELECT * FROM JOINABLE_TABLES WHERE RKEY='{chosen_tables[0][3]}' and table_name != '{table_name}'")
+        total_tables = list(cur.fetchall())
+        filtered_tables = []
+        for i in range(len(total_tables)):
+            # total_tables[i][3] : 'attributes' from REPRESENTATIVE_KEYS table
+            # is a dictionary which has representative key name as a key, and
+            # a corresponding attribute as a value
+            total_tables[i] = list(total_tables[i])
+            strs = total_tables[i][3].replace("'", '"')
 
-    cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE RKEY='{chosen_tables[0][3]}'")
-    total_tables = cur.fetchall()
-    db.close()
+            out_dict = json.loads(strs)
+            if rkey not in out_dict.keys():
+                continue
+            total_tables[i][3] = rkey
+            filtered_tables.append(total_tables[i])
+        db.close()
+
     return render(request, 'singlejoin/join.html',
-                  {"tablename": table_name, "total_tables": total_tables, "is_db": request.session.get('host'),
+                  {"tablename": table_name, "total_tables": filtered_tables, "is_db": request.session.get('host'),
                    "user": request.session.get('user'),
                    "passwd": request.session.get('passwd'),
                    "db": request.session.get('db'),
                    "login": request.session.get('login'),
                    "port": request.session.get('port'),
-                   "standard_keys": STANDARD_KEYS,
                    "chosen_tables": chosen_tables,
-                   "representative_props": REPRESENTATIVE_PROPS,
-                   "chosen_table_list": chosen_table_list,
-                   "is_full": is_full})
+                   "rkey": rkey,
+                   })
 
-
-def join(request, rkey, chosen_table_list=chosen_table_list):
-    if request.session.get('login') != -1:
+def join(request):
+    if request.method == 'POST':
         db = MySQLdb.connect(host=request.session.get('host'),
-                            user=request.session.get('user'),
-                            passwd=request.session.get('passwd'),
-                            db=request.session.get('db'),
-                            port=request.session.get('port'),)
+                             user=request.session.get('user'),
+                             passwd=request.session.get('passwd'),
+                             db=request.session.get('db'),
+                             port=request.session.get('port'), )
 
         cur = db.cursor()
-        table_name1 = chosen_table_list[0]
-        table_name2 = chosen_table_list[1]
-        cur.execute(f"SELECT attributes FROM REPRESENTATIVE_KEY WHERE table_name='{table_name1[0]}'")
-        prop1 = cur.fetchone()[0][rkey]
 
-        cur.execute(f"SELECT attributes FROM REPRESENTATIVE_KEY WHERE table_name='{table_name2[0]}'")
-        prop2 = cur.fetchone()[0][rkey]
+        table_list = request.POST.getlist('join[]')
+        table_name = request.POST.get('table_name')
+        rkey = request.POST.get('rkey')
 
-        # Inner Join
-        cur.execute(f"""CREATE TABLE {table_name1}_{table_name2} AS 
-                        SELECT * FROM {table_name1} AS T1
-                        INNER JOIN ON {table_name2} AS T2
-                        WHERE T1.{prop1}=T2.{prop2}
-        """)
-        cur.execute(f"SELECT * FROM {table_name1}_{table_name2}")
-        joined_table = cur.fetchall()
-    else:
-        joined_table = None
-
-    return render(request, 'singlejoin/joinresult.html', {"table_1":table_name1, "table_2":table_name2, "is_db": request.session.get('host'),
-                    "user": request.session.get('user'),
-                    "passwd":request.session.get('passwd'),
-                    "db":request.session.get('db'),
-                    "login":request.session.get('login'),
-                    "port":request.session.get('port'),
-                    "standard_keys":STANDARD_KEYS,
-                    "joined_table":joined_table,
-                    "representative_props":REPRESENTATIVE_PROPS})
+        cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
+        chosen_tables = cur.fetchall()
+    return render(request, 'singlejoin/join.html', {"tablename": table_name, "is_db": request.session.get('host'),
+                                                   "user": request.session.get('user'),
+                                                   "passwd": request.session.get('passwd'),
+                                                   "db": request.session.get('db'),
+                                                   "login": request.session.get('login'),
+                                                   "port": request.session.get('port'),
+                                                   "chosen_tables": chosen_tables,
+                                                   "table_list": table_list,
+                                                   "rkey": rkey,
+                                                   })
 
 
+def do_join(request):
+    pass

@@ -98,6 +98,7 @@ def multijoin_main(request):
         else:
             cur.execute("SELECT * from JOINABLE_TABLES")
         total_tables = list(cur.fetchall())
+
         for i in range(len(total_tables)):
             # total_tables[i][3] : 'attributes' from REPRESENTATIVE_KEYS table
             # is a dictionary which has representative key name as a key, and 
