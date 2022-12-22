@@ -20,7 +20,6 @@ from board.views import *
 
 urlpatterns = [
     path('', main, name='main'),
-    path('search/', search, name='search'),
     path('db/', db, name='db'),
     path('undb/', undb, name='undb'),
     path('csv/', csv_register, name='csv'),

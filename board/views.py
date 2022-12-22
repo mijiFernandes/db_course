@@ -11,28 +11,6 @@ regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
 regEx2 = "[^0-9]"
 
 
-def main(request):
-    return render(request, "main.html", {"is_db": request.session.get('host')})
-
-
-def search(request):
-    if request.method == "POST":
-        table_name = request.POST.get('table')
-        db = MySQLdb.connect(host=request.POST.get('host'),
-                             user=request.POST.get('user'),
-                             passwd=request.POST.get('passwd'),
-                             db=request.POST.get('db'),
-                             port=request.POST.get('port'))
-
-        cur = db.cursor()
-        if cur.execute(f"SHOW TABLES LIKE '{table_name}'") == 0:
-            return render(request, "search.html", {"data_set": [f"Table '{table_name}' doesn't exist"]})
-        cur.execute(f"SELECT * FROM {table_name}")
-        db.close()
-        return render(request, "search.html", {"data_set": cur.fetchall(), "is_db": request.session.get('host')})
-    else:
-        return render(request, "search.html", {"is_db": request.session.get('host')})
-
 
 def main(request):
     return render(request, "index.html", 
@@ -85,6 +63,7 @@ def db(request):
                     `REPRESENTATIVE_KEY` TEXT COLLATE UTF8_BIN DEFAULT NULL
                     ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COLLATE=UTF8_BIN;""")
             db.commit()
+
     except MySQLdb.Error as e:
         request.session['login'] = -1
         
