@@ -55,15 +55,20 @@
                             <td colspan="2" style="overflow:auto;">
                                 <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
                             </td>
-                        {% elif forloop.counter0 == 11 %}
+                        {% elif forloop.counter0 == 10 %}
+                            <td colspan="2" style="overflow:auto;">{{ col.candidate }}</td>
                             <td colspan="2" style="overflow:auto;">
+                                {% if col.key %}
                                 <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
-                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="{{ col.key }}">{{ col.key }}</option>
                                     <option value="-">-</option>
                                     {% for key in key_list %}
                                     <option value="{{ key }}">{{ key }}</option>
                                     {% endfor %}
                                 </select>
+                                {% else %}
+                                limited
+                                {% endif %}
                             </td>
                         {% else %}
                             <td colspan="2" style="overflow:auto;">{{ col }}</td>
@@ -123,15 +128,20 @@
                             <td colspan="2" style="overflow:auto;">
                                 <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
                             </td>
-                        {% elif forloop.counter0 == 9 %}
+                        {% elif forloop.counter0 == 8 %}
+                            <td colspan="2" style="overflow:auto;">{{ col.candidate }}</td>
                             <td colspan="2" style="overflow:auto;">
+                                {% if col.key %}
                                 <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
-                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="{{ col.key }}">{{ col.key }}</option>
                                     <option value="-">-</option>
                                     {% for key in key_list %}
                                     <option value="{{ key }}">{{ key }}</option>
                                     {% endfor %}
                                 </select>
+                                {% else %}
+                                limited
+                                {% endif %}
                             </td>
                         {% else %}
                             <td colspan="2" style="overflow:auto;">{{ col }}</td>

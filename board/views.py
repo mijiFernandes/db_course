@@ -5,10 +5,9 @@ import json
 import re
 from django.http import HttpResponse
 import csv
-from django.template import loader
 
 regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
-regEx2 = "^[0-9]*$"
+regEx2 = "[^0-9]"
 
 
 def main(request):
@@ -243,7 +242,6 @@ def download_num(request, table_id):
          "attributes": temp[5],
          "representatives": temp[6],
          "representative_key": temp[7]}
-    key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     response = HttpResponse(content_type='text/csv',
                             headers={'Content-Disposition': f'attachment; filename="numeric_data_of_{table["table_name"]}.csv"'})
     response.write(u''.encode('utf-8-sig'))
@@ -329,7 +327,6 @@ def download_cat(request, table_id):
          "attributes": temp[5],
          "representatives": temp[6],
          "representative_key": temp[7]}
-    key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     response = HttpResponse(content_type='text/csv',
                             headers={'Content-Disposition': f'attachment; filename="categorical_data_of_{table["table_name"]}.csv"'})
     response.write(u''.encode('utf-8-sig'))
@@ -634,18 +631,16 @@ def modify(request, table_id):
         else:
             row.append(representatives[f"{i[0]}"])
 
-        if distinct / table['records'] >= 0.9:
-            row.append("O")
-        else:
-            row.append("X")
-        rows.append(row)
-
         representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
 
-        if not representative_key[f"{i[0]}"]:
-            row.append("-")
+        if distinct / table['records'] >= 0.9:
+            if not representative_key[f"{i[0]}"]:
+                row.append({"candidate": "O", "key": "-"})
+            else:
+                row.append({"candidate": "O", "key": representative_key[f"{i[0]}"]})
         else:
-            row.append(representative_key[f"{i[0]}"])
+            row.append({"candidate": "X", "key": None})
+        rows.append(row)
 
     numeric = []
     categorical = []
@@ -659,25 +654,14 @@ def modify(request, table_id):
     if request.method == "POST" and request.POST.get('num_edit'):
         representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
         representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+
         for i in range(0, len(numeric)):
             if not request.POST.get(str(i)):
                 representatives[numeric[i][0]] = "-"
-                numeric[i][9] = "-"
             else:
                 representatives[numeric[i][0]] = request.POST.get(str(i))
-                numeric[i][9] = request.POST.get(str(i))
 
-            if request.POST.get(f"type{i}") == "change":
-                try:
-                    cur.execute(f"SELECT {numeric[i][0]} FROM {table['table_name']}")
-                    data = cur.fetchall()
-                    for j in data:
-                        print(re.search(regEx2, j[0]))
-                except:
-                    print("exception!")
-                    pass
             representative_key[numeric[i][0]] = request.POST.get(f"representative_key{i}")
-            numeric[i][11] = request.POST.get(f"representative_key{i}")
 
             cur.execute(f"""UPDATE TABLE_COUNTS 
             SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
@@ -685,21 +669,28 @@ def modify(request, table_id):
             SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             cur.execute(f"""UPDATE representative_keys 
             SET REPRESENTATIVE_KEY = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+
+            if request.POST.get(f"type{i}") == "change":
+                try:
+                    cur.execute(f"ALTER TABLE {table['table_name']} MODIFY {numeric[i][0]} TEXT;")
+                    db.commit()
+                except:
+                    pass
+
             db.commit()
+        return redirect('modify')
 
     if request.method == "POST" and request.POST.get('cat_edit'):
         representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
         representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+
         for i in range(0, len(categorical)):
             if not request.POST.get(str(i)):
                 representatives[categorical[i][0]] = "-"
-                categorical[i][7] = "-"
             else:
                 representatives[categorical[i][0]] = request.POST.get(str(i))
-                categorical[i][7] = request.POST.get(str(i))
 
             representative_key[categorical[i][0]] = request.POST.get(f"representative_key{i}")
-            categorical[i][9] = request.POST.get(f"representative_key{i}")
 
             cur.execute(f"""UPDATE TABLE_COUNTS 
             SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
@@ -709,16 +700,21 @@ def modify(request, table_id):
             SET REPRESENTATIVE_KEY = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             db.commit()
 
+            count = 0
             if request.POST.get(f"type{i}") == "change":
                 try:
                     cur.execute(f"SELECT {categorical[i][0]} FROM {table['table_name']}")
                     data = cur.fetchall()
                     for j in data:
-                        # print(j)
-                        print(re.search(regEx2, j[0]))
+                        if not re.search(regEx2, j[0]):
+                            count += 1
+                    if count == len(data):
+                        cur.execute(f"ALTER TABLE {table['table_name']} MODIFY {categorical[i][0]} INT;")
+                        db.commit()
                 except:
-                    print("exception!")
                     pass
+            db.commit()
+        return redirect('modify')
 
     context = {'table': table, "is_db": request.session.get('host'),
                "key_list": key_list, "numeric": numeric, "categorical": categorical}
