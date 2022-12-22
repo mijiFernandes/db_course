@@ -58,7 +58,7 @@
           {% csrf_token %}
         {% for data in tuples %}
           {% if forloop.first%}
-          <td><button class="btn btn-link-2" type="submit" name="table_name" value={{data}}>{{data}}</button></td>
+          <td><button class="btn btn-link" type="submit" name="table_name" value={{data}}>{{data}}</button></td>
           {% elif forloop.last %}
           <td><select class="custom-select mr-sm-2" id="rkey" name="rkey">
             {% for key in data %}
