@@ -85,3 +85,17 @@
         <script src="{% static 'js/bootstrap.js'%}"></script>
     </body>
 </html>
+
+<script>
+    function checkOnlyOne(element) {
+
+        const checkboxes
+            = document.getElementsByName("selected");
+
+         checkboxes.forEach((cb) => {
+            cb.checked = false;
+         })
+
+        element.checked = true;
+}
+</script>
