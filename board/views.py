@@ -61,7 +61,7 @@ def db(request):
         cur.execute("""CREATE TABLE IF NOT EXISTS `REPRESENTATIVE_KEYS` (
                `ID` INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
                `TABLE_NAME` TEXT COLLATE UTF8_BIN DEFAULT NULL,
-                `REPRESENTATIVE_PROP` TEXT COLLATE UTF8_BIN DEFAULT NULL
+                `REPRESENTATIVE_KEY` TEXT COLLATE UTF8_BIN DEFAULT NULL
                 ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COLLATE=UTF8_BIN;""")
         db.commit()
     return render(request, "db.html", {"is_db": request.session.get('host')})
@@ -214,7 +214,7 @@ def table_delete(request, table_id):
          "attributes": temp[5]}
     cur.execute(f"DROP TABLE {table['table_name']};")
     cur.execute(f"DELETE FROM TABLE_COUNTS WHERE `id`={table_id};")
-    cur.execute(f"DELETE FROM representative_keys WHERE `TABLE_NAME`='{table['table_name']}';")
+    cur.execute(f"DELETE FROM representative_keys WHERE `TABLE_NAME` = '{table['table_name']}';")
     db.commit()
     db.close()
 
@@ -578,10 +578,9 @@ def modify(request, table_id):
                 cur.execute(f"""UPDATE TABLE_COUNTS
                 SET representative_key = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
                 cur.execute(f"""UPDATE representative_keys
-                SET representative_prop = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                SET representative_key = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
                 db.commit()
                 break
-
 
     cur.execute(f"DESC {table['table_name']}")
     for i in cur.fetchall():
@@ -669,10 +668,14 @@ def modify(request, table_id):
             representative_key[numeric[i][0]] = request.POST.get(f"representative_key{i}")
             numeric[i][11] = request.POST.get(f"representative_key{i}")
 
+            print(request.POST.get('num_edit'))
+
             cur.execute(f"""UPDATE TABLE_COUNTS 
             SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             cur.execute(f"""UPDATE TABLE_COUNTS 
             SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+            cur.execute(f"""UPDATE representative_keys 
+            SET REPRESENTATIVE_KEY = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             db.commit()
 
     if request.method == "POST" and request.POST.get('cat_edit'):
@@ -693,6 +696,8 @@ def modify(request, table_id):
             SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             cur.execute(f"""UPDATE TABLE_COUNTS 
             SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+            cur.execute(f"""UPDATE representative_keys 
+            SET REPRESENTATIVE_KEY = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             db.commit()
 
     context = {'table': table, "is_db": request.session.get('host'),
