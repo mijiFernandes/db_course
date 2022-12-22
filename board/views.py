@@ -3,7 +3,7 @@ import pandas as pd
 import MySQLdb
 import json
 import re
-
+from mysite.common_assets import STANDARD_KEYS
 
 
 def search(request):
@@ -43,21 +43,21 @@ def db(request):
                     "db":request.session.get('db'),
                     "login":request.session.get('login'),
                     "port":request.session.get('port'),})
-
+    request.session['login'] = 0
     try:
         if request.method == "POST":
             request.session['host'] = request.POST.get('host')
             request.session['user'] = request.POST.get('user')
             request.session['passwd'] = request.POST.get('passwd')
             request.session['db'] = request.POST.get('db')
-            request.session['port'] = int(request.POST.get('port')) if request.POST.get('port') is not None and request.POST.get('port') is not '' else None
+            request.session['port'] = int(request.POST.get('port')) if request.POST.get('port') is not None and request.POST.get('port') != '' else None
 
             db = MySQLdb.connect(host=request.POST.get('host'),
                                 user=request.POST.get('user'),
                                 passwd=request.POST.get('passwd'),
                                 db=request.POST.get('db'),
                                 port=int(request.POST.get('port')))
-
+            request.session['login'] = 1
             cur = db.cursor()
             cur.execute("""CREATE TABLE IF NOT EXISTS `TABLE_COUNTS` (
             `ID` INT PRIMARY KEY auto_increment NOT NULL,
@@ -78,8 +78,10 @@ def db(request):
             db.commit()
     except MySQLdb.Error as e:
         request.session['login'] = -1
+        
     except TypeError as e:
         request.session['login'] = -1
+        
     return render(request, "db.html", {"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
                     "passwd":request.session.get('passwd'),
@@ -119,8 +121,9 @@ def csv(request):
 
         sql = "CREATE TABLE IF NOT EXISTS `"
         sql += table_name + "` ("
-
-        key_list = ["전화번호", "이메일주소", "IP주소", "차량번호", "주민등록번호"]
+        
+        # Representative key names(STANDARD_KEYS) have to be tracked
+        key_list = STANDARD_KEYS
         attributes = []
 
         for i in range(0, len(temp[0])):

@@ -15,58 +15,64 @@ def multijoin_main(request):
 
         cur = db.cursor()
         
-        # cur.execute(f"SHOW TABLES")
-        # total_tables = cur.fetchall()
+    # DELETED deprecated python implementation
 
-        # counts = []
-        # tables = []
-        # properties = []
-        # pks = []
-        # for i, table_tuple in enumerate(total_tables):
-        #     table_name = table_tuple[0]
-        #     cur.execute(f"select * from {table_name} limit 1")
-        #     # PK should be chosen before join
-        #     features = cur.description[0]
-        #     feature = features[0]
-            
-        #     tables.append(table_name)
-
-        #     cur.execute(f"select count(*) from {table_name}")
-        #     count = cur.fetchone()[0]
-        #     counts.append(count)
-
-        #     # Representative property should be chosen before join
-        #     properties.append("금융정보")
-        #     pks.append(feature)
-        
         # Representative property should be chosen before join
-        dict_s = json.dumps({"전화번호":"PHONE_NUM", "이메일주소":"MAIL_ADDR"}, ensure_ascii=False)
-        cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_KEY AS
-                    select distinct c.table_name, '{dict_s}' as RKEY from information_schema.columns as c  
-                    where table_schema='{request.session.get('db')}' and 
-                        c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
-                    """)
+        # dict_s = json.dumps({"전화번호":"PHONE_NUM", "이메일주소":"MAIL_ADDR"}, ensure_ascii=False)
+        # cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_KEY AS
+        #             select distinct c.table_name, '{dict_s}' as RKEY from information_schema.columns as c  
+        #             where table_schema='{request.session.get('db')}' and 
+        #                 c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
+        #             """)
 
-        # PK should be chosen before join
-        cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_PROP AS
-                        select distinct c.table_name, "금융정보" as RPROP from information_schema.columns as c where table_schema='{request.session.get('db')}' and 
-                        c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
-                    """)
-        # Records count should be done in real-time before join
-        cur.execute(f"""CREATE TABLE IF NOT EXISTS TABLE_COUNTS AS
-                    select table_name, table_rows as counts from 
-                    information_schema.tables where table_schema='{request.session.get('db')}'
-                    """)
+        # # PK should be chosen before join
+        # cur.execute(f"""CREATE TABLE IF NOT EXISTS REPRESENTATIVE_PROP AS
+        #                 select distinct c.table_name, "금융정보" as RPROP from information_schema.columns as c where table_schema='{request.session.get('db')}' and 
+        #                 c.table_name not in ('REPRESENTATIVE_PROP', 'REPRESENTATIVE_KEY', 'TABLE_COUNTS')
+        #             """)
+        # # Records count should be done in real-time before join
+        # cur.execute(f"""CREATE TABLE IF NOT EXISTS TABLE_COUNTS AS
+        #             select table_name, table_rows as counts from 
+        #             information_schema.tables where table_schema='{request.session.get('db')}'
+        #             """)
 
         cur.execute("""CREATE VIEW IF NOT EXISTS JOINABLE_TABLES AS
-                        SELECT  RP.table_name, TC.counts as NUM_RECORDS, RP.RPROP, RK.RKEY FROM
-                        REPRESENTATIVE_PROP as RP 
-                        INNER JOIN REPRESENTATIVE_KEY AS RK
-                        ON RP.table_name=RK.table_name 
-                        INNER JOIN TABLE_COUNTS as TC
-                        ON RP.table_name=TC.table_name
+                       SELECT  TABLE_NAME, COUNTS as NUM_RECORDS, REPRESENTATIVES AS RPROP, REPRESENTATIVE_KEY AS RKEY 
+                       FROM TABLE_COUNTS
+                       WHERE SCAN=1
                     """)
+        db.commit()
+        cur.execute("SELECT * FROM JOINABLE_TABLES")
+        prev_joinables = list(cur.fetchall())
+        dropped_joinables = []
 
+        for i, tuple_ in enumerate(prev_joinables):
+            tuple_ = list(tuple_)
+            prop_dict = json.loads(tuple_[2].replace("'", '"'))
+            key_dict = json.loads(tuple_[3].replace("'", '"'))
+
+            # RPROP check
+            drop=True
+            for prop in prop_dict.values():
+                if prop:
+                    drop = False
+                    break
+            if drop:
+                dropped_joinables.append(tuple_[0])
+                continue
+            # RKEY check
+            drop = True
+            for prop in key_dict.values():
+                if prop:
+                    drop = False
+                    break
+            if drop:
+                dropped_joinables.append(tuple_[0])
+                continue
+        
+        for dropped in dropped_joinables:
+            cur.execute(f"DELETE FROM JOINABLE_TABLES WHERE TABLE_NAME='{dropped}'")
+            db.commit()
         if request.method == 'POST':
             table_name = request.POST.get('table_name')
             standard_key = request.POST.get('standard_key')
@@ -106,8 +112,9 @@ def multijoin_main(request):
             strs = total_tables[i][3].replace("'", '"')
            
             out_dict = json.loads(strs)
-            
-            total_tables[i][3] = list(out_dict.keys())
+            rkeys = list(out_dict.keys())
+            occupied_keys = [rkey for rkey in rkeys if out_dict[rkey] != None and out_dict[rkey] != '' and out_dict[rkey] != '-' ]
+            total_tables[i][3] = occupied_keys
             
         db.close()
         return render(request, 'multijoin/main.html', {"total_tables":total_tables,"is_db": request.session.get('host'),
