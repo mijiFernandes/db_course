@@ -153,7 +153,6 @@ def multijoin(request):
             if rkey not in out_dict.keys():
                 continue
             total_tables[i][3] = rkey
-            total_tables[i].insert(0, 0)
             filtered_tables.append(total_tables[i])
         db.close()
 
@@ -170,7 +169,33 @@ def multijoin(request):
 
 
 def join(request):
-    return render(request, '404.html')
+    if request.method =='POST':
+        db = MySQLdb.connect(host=request.session.get('host'),
+                            user=request.session.get('user'),
+                            passwd=request.session.get('passwd'),
+                            db=request.session.get('db'),
+                            port=request.session.get('port'),)
+
+        cur = db.cursor()
+
+        table_list = request.POST.getlist('join[]')
+        table_name = request.POST.get('table_name')
+        print("="*20, request.POST)
+        rkey = request.POST.get('rkey')
+
+        cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
+        chosen_tables = cur.fetchall()
+    return render(request, 'multijoin/join.html', {"tablename":table_name,"is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'),
+                    "chosen_tables":chosen_tables,
+                    "table_list":table_list,
+                    "rkey":rkey,
+                    })
+    # return render(request, '404.html')
     # if request.session.get('login') != -1:
     #     db = MySQLdb.connect(host=request.session.get('host'),
     #                         user=request.session.get('user'),
