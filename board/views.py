@@ -197,48 +197,74 @@ def csv_register(request):
 
 
 def list_to_scan(request):
-    db = MySQLdb.connect(host=request.session.get('host'),
-                         user=request.session.get('user'),
-                         passwd=request.session.get('passwd'),
-                         db=request.session.get('db'),
-                         port=int(request.session.get('port')))
+    try:
+        db = MySQLdb.connect(host=request.session.get('host'),
+                            user=request.session.get('user'),
+                            passwd=request.session.get('passwd'),
+                            db=request.session.get('db'),
+                            port=int(request.session.get('port')))
 
-    cur = db.cursor()
-    sql = """SELECT * FROM TABLE_COUNTS"""
-    cur.execute(sql)
-    table_list = []
-    tables = cur.fetchall()
-    for table in tables:
-        table_list.append({"id": table[0],
-         "table_name": table[1],
-         "records": table[2],
-         "scan": table[3],
-         "key_list": table[4],
-         "attributes": table[5]})
-    context = {"table_list": table_list, "is_db": request.session.get('host')}
+        cur = db.cursor()
+        sql = """SELECT * FROM TABLE_COUNTS"""
+        cur.execute(sql)
+        table_list = []
+        tables = cur.fetchall()
+        for table in tables:
+            table_list.append({"id": table[0],
+            "table_name": table[1],
+            "records": table[2],
+            "scan": table[3],
+            "key_list": table[4],
+            "attributes": table[5]})
+        context = {"table_list": table_list, "is_db": request.session.get('host'),
+                        "user": request.session.get('user'),
+                        "passwd":request.session.get('passwd'),
+                        "db":request.session.get('db'),
+                        "login":request.session.get('login'),
+                        "port":request.session.get('port'),}
+    except:
+        context = {"table_list": None, "is_db": request.session.get('host'),
+                        "user": request.session.get('user'),
+                        "passwd":request.session.get('passwd'),
+                        "db":request.session.get('db'),
+                        "login":request.session.get('login'),
+                        "port":request.session.get('port'),}
     return render(request, "scan_list.html", context)
 
 
 def list_to_modify(request):
-    db = MySQLdb.connect(host=request.session.get('host'),
-                         user=request.session.get('user'),
-                         passwd=request.session.get('passwd'),
-                         db=request.session.get('db'),
-                         port=request.session.get('port'))
+    try:
+        db = MySQLdb.connect(host=request.session.get('host'),
+                            user=request.session.get('user'),
+                            passwd=request.session.get('passwd'),
+                            db=request.session.get('db'),
+                            port=request.session.get('port'))
 
-    cur = db.cursor()
-    sql = """SELECT * FROM `TABLE_COUNTS`"""
-    cur.execute(sql)
-    table_list = []
-    tables = cur.fetchall()
-    for table in tables:
-        table_list.append({"id": table[0],
-                           "table_name": table[1],
-                           "records": table[2],
-                           "scan": table[3],
-                           "key_list": table[4],
-                           "attributes": table[5]})
-    context = {"table_list": table_list, "is_db": request.session.get('host')}
+        cur = db.cursor()
+        sql = """SELECT * FROM `TABLE_COUNTS`"""
+        cur.execute(sql)
+        table_list = []
+        tables = cur.fetchall()
+        for table in tables:
+            table_list.append({"id": table[0],
+                            "table_name": table[1],
+                            "records": table[2],
+                            "scan": table[3],
+                            "key_list": table[4],
+                            "attributes": table[5]})
+        context = {"table_list": table_list, "is_db": request.session.get('host'),
+                        "user": request.session.get('user'),
+                        "passwd":request.session.get('passwd'),
+                        "db":request.session.get('db'),
+                        "login":request.session.get('login'),
+                        "port":request.session.get('port'),}
+    except:
+        context = {"table_list": None, "is_db": request.session.get('host'),
+                        "user": request.session.get('user'),
+                        "passwd":request.session.get('passwd'),
+                        "db":request.session.get('db'),
+                        "login":request.session.get('login'),
+                        "port":request.session.get('port'),}
     return render(request, "modify_list.html", context)
 
 
@@ -561,11 +587,21 @@ def detail(request, table_id):
             else:
                 categorical.append(row)
         context = {'table': table, "is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'),
                    "key_list": key_list, "numeric": numeric, "categorical": categorical}
         db.close()
     else:
 
-        context = {'table': table, "is_db": request.session.get('host'), "structure": "", "key_list": key_list}
+        context = {'table': table, "is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'), "structure": "", "key_list": key_list}
 
     return render(request, 'table_detail.html', context)
 
@@ -762,6 +798,11 @@ def modify(request, table_id):
         return redirect('modify')
 
     context = {'table': table, "is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'),
                "key_list": key_list, "numeric": numeric, "categorical": categorical}
     db.close()
     return render(request, 'table_modify.html', context)

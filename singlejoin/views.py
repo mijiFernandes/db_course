@@ -354,25 +354,34 @@ def join(request):
                                                           })
 
 def check_result(request):
-    db = MySQLdb.connect(host=request.session.get('host'),
-                        user=request.session.get('user'),
-                        passwd=request.session.get('passwd'),
-                        db=request.session.get('db'),
-                        port=request.session.get('port'),)
+    try:
+        db = MySQLdb.connect(host=request.session.get('host'),
+                            user=request.session.get('user'),
+                            passwd=request.session.get('passwd'),
+                            db=request.session.get('db'),
+                            port=request.session.get('port'),)
 
-    cur = db.cursor()
-    cur.execute("SELECT * FROM SINGLE_JOIN_RESULTS")
-    result = cur.fetchall()
-   
-    return render(request, 'singlejoin/joinresult_table.html', {"is_db": request.session.get('host'),
-                    "user": request.session.get('user'),
-                    "passwd":request.session.get('passwd'),
-                    "db":request.session.get('db'),
-                    "login":request.session.get('login'),
-                    "port":request.session.get('port'),
-                    "result":result,
-                    })
-
+        cur = db.cursor()
+        cur.execute("SELECT * FROM SINGLE_JOIN_RESULTS")
+        result = cur.fetchall()
+    
+        return render(request, 'singlejoin/joinresult_table.html', {"is_db": request.session.get('host'),
+                        "user": request.session.get('user'),
+                        "passwd":request.session.get('passwd'),
+                        "db":request.session.get('db'),
+                        "login":request.session.get('login'),
+                        "port":request.session.get('port'),
+                        "result":result,
+                        })
+    except:
+        return render(request, 'singlejoin/joinresult_table.html', {"is_db": request.session.get('host'),
+                        "user": request.session.get('user'),
+                        "passwd":request.session.get('passwd'),
+                        "db":request.session.get('db'),
+                        "login":request.session.get('login'),
+                        "port":request.session.get('port'),
+                        "result":None,
+                        })
 def download_view(request):
     db = MySQLdb.connect(host=request.session.get('host'),
                         user=request.session.get('user'),
