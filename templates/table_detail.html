@@ -1,17 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+{% extends 'index.html' %}
+{% block content %}
 <body>
     <div>
         <button><a href="{% url 'scan' %}">목록으로</a></button>
-        {% if is_db %}
-        <h5 style="float: right; color:green">DB ON</h5>
-        {% else %}
-        <h5 style="float: right; color:red">DB OFF</h5>
-        {% endif %}
     </div>
     <br>
     {% if not table.scan %}
@@ -100,4 +91,4 @@
     </div>
     {% endif %}
 </body>
-</html>
+{% endblock %}
