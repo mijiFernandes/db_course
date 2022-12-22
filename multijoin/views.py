@@ -3,6 +3,7 @@ from mysite.common_assets import STANDARD_KEYS, REPRESENTATIVE_PROPS
 import MySQLdb
 from board.views import undb
 import json
+import numpy as np
 # Create your views here.
 
 def multijoin_main(request):
@@ -215,20 +216,63 @@ def join(request):
 
         table_list = request.POST.getlist('join[]')
         table_name = request.POST.get('table_name')
-       
         rkey = request.POST.get('rkey')
 
         cur.execute(f"SELECT * FROM FILTERED_TABLE WHERE table_name='{table_name}'")
-        chosen_tables = cur.fetchall()
-    return render(request, 'multijoin/join.html', {"tablename":table_name,"is_db": request.session.get('host'),
+        basetable = list(cur.fetchall()[0])
+        success = True
+
+        
+        for join_table_name in table_list:
+            key_dict = json.loads(basetable[3].replace("'", '"'))
+            base_key_prop = ''
+            for key in key_dict.keys():
+                if key_dict[key] == rkey:
+                    base_key_prop = key
+            if base_key_prop == '':
+                raise ValueError("Base key property should not be None")
+            cur.execute(f"SELECT * FROM FILTERED_TABLE WHERE table_name='{join_table_name}'")
+            jointable = list(cur.fetchall()[0])
+            join_key_dict = json.loads(jointable[3].replace("'", '"'))
+            join_key_prop = ''
+            for key in join_key_dict.keys():
+                if join_key_dict[key] == rkey:
+                    join_key_prop = key
+            if join_key_prop == '':
+                raise ValueError("Join key property should not be None")
+            # Inner Join
+            try:
+                msg=f"T1 prop: {base_key_prop} T2 prop: {join_key_prop}\n"
+                cur.execute(f"DESC {table_name}")
+                base_columns = [f"T1.{col} AS base_{col}" for col in list(np.array(cur.fetchall())[:, 0])]
+                base_columns_sql = ','.join(base_columns)
+
+                cur.execute(f"DESC {join_table_name}")
+                join_columns = [f"T2.{col} AS join_{col}" for col in list(np.array(cur.fetchall())[:, 0])]
+                join_columns_sql = ','.join(join_columns)
+
+                cur.execute(f"DROP TABLE IF EXISTS {table_name}_{join_table_name}")
+                cur.execute(f"""CREATE TABLE {table_name}_{join_table_name} AS 
+                                SELECT {base_columns_sql}, {join_columns_sql} FROM {table_name} AS T1
+                                INNER JOIN {join_table_name} AS T2
+                                ON T1.{base_key_prop}=T2.{join_key_prop}
+                """)
+                
+            # cur.execute(f"SELECT * FROM {table_name}_{join_table_name}")
+            # joined_table = cur.fetchall()
+            # joined_tables.append(joined_table)
+            except MySQLdb.Error as e:
+                success=False
+                msg += str(e)
+
+    return render(request, 'multijoin/result.html', {"tablename":table_name,"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
                     "passwd":request.session.get('passwd'),
                     "db":request.session.get('db'),
                     "login":request.session.get('login'),
                     "port":request.session.get('port'),
-                    "chosen_tables":chosen_tables,
-                    "table_list":table_list,
-                    "rkey":rkey,
+                    "success":success,
+                    "msg":msg,
                     })
     # return render(request, '404.html')
     # if request.session.get('login') != -1:
