@@ -54,6 +54,11 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div>
+            <button>
+                <a href="{% url 'download_num' table.id %}" style="text-decoration: none; color: inherit;">수치 속성 스캔 결과 내려받기</a>
+            </button>
+        </div>
     </div>
     {% endif %}
     <br>
@@ -87,6 +92,11 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div>
+            <button>
+                <a href="{% url 'download_cat' table.id  %}" style="text-decoration: none; color: inherit;">범주 속성 스캔 결과 내려받기</a>
+            </button>
+        </div>
     </div>
     {% endif %}
 </body>

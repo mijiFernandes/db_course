@@ -44,19 +44,31 @@
 
                         {% csrf_token %}
                         {% for col in row %}
-                        {% if forloop.counter0 == 9 %}
+                        {% if forloop.counter0 == 1 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <select style="text-align: center; width:80%" name="type{{ forloop.parentloop.counter0 }}">
+                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="change">변경</option>
+                                </select>
+                            </td>
+                        {% elif forloop.counter0 == 9 %}
                             <td colspan="2" style="overflow:auto;">
                                 <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
                             </td>
-                        {% elif forloop.counter0 == 11 %}
+                        {% elif forloop.counter0 == 10 %}
+                            <td colspan="2" style="overflow:auto;">{{ col.candidate }}</td>
                             <td colspan="2" style="overflow:auto;">
+                                {% if col.key %}
                                 <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
-                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="{{ col.key }}">{{ col.key }}</option>
                                     <option value="-">-</option>
                                     {% for key in key_list %}
                                     <option value="{{ key }}">{{ key }}</option>
                                     {% endfor %}
                                 </select>
+                                {% else %}
+                                limited
+                                {% endif %}
                             </td>
                         {% else %}
                             <td colspan="2" style="overflow:auto;">{{ col }}</td>
@@ -73,7 +85,7 @@
                 </tbody>
             </table>
             <div>
-                <button type="submit" name="num_edit" value="num_edit">편집</button>
+                <button type="submit" name="num_edit" value="num_edit">변경사항 저장</button>
             </div>
         </form>
     </div>
@@ -105,19 +117,31 @@
                     <tr>
                         {% csrf_token %}
                         {% for col in row %}
-                        {% if forloop.counter0 == 7 %}
+                        {% if forloop.counter0 == 1 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <select style="text-align: center; width:80%" name="type{{ forloop.parentloop.counter0 }}">
+                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="change">변경</option>
+                                </select>
+                            </td>
+                        {% elif forloop.counter0 == 7 %}
                             <td colspan="2" style="overflow:auto;">
                                 <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
                             </td>
-                        {% elif forloop.counter0 == 9 %}
+                        {% elif forloop.counter0 == 8 %}
+                            <td colspan="2" style="overflow:auto;">{{ col.candidate }}</td>
                             <td colspan="2" style="overflow:auto;">
+                                {% if col.key %}
                                 <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
-                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="{{ col.key }}">{{ col.key }}</option>
                                     <option value="-">-</option>
                                     {% for key in key_list %}
                                     <option value="{{ key }}">{{ key }}</option>
                                     {% endfor %}
                                 </select>
+                                {% else %}
+                                limited
+                                {% endif %}
                             </td>
                         {% else %}
                             <td colspan="2" style="overflow:auto;">{{ col }}</td>
@@ -133,7 +157,7 @@
                 </tbody>
             </table>
             <div>
-                <button type="submit" name="cate_edit" value="cate_edit">편집</button>
+                <button type="submit" name="cat_edit" value="cat_edit">변경사항 저장</button>
             </div>
         </form>
     </div>
