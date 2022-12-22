@@ -8,6 +8,8 @@ import csv
 from django.template import loader
 
 regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
+regEx2 = "^[0-9]*$"
+
 
 def main(request):
     return render(request, "main.html", {"is_db": request.session.get('host')})
@@ -665,10 +667,17 @@ def modify(request, table_id):
                 representatives[numeric[i][0]] = request.POST.get(str(i))
                 numeric[i][9] = request.POST.get(str(i))
 
+            if request.POST.get(f"type{i}") == "change":
+                try:
+                    cur.execute(f"SELECT {numeric[i][0]} FROM {table['table_name']}")
+                    data = cur.fetchall()
+                    for j in data:
+                        print(re.search(regEx2, j[0]))
+                except:
+                    print("exception!")
+                    pass
             representative_key[numeric[i][0]] = request.POST.get(f"representative_key{i}")
             numeric[i][11] = request.POST.get(f"representative_key{i}")
-
-            print(request.POST.get('num_edit'))
 
             cur.execute(f"""UPDATE TABLE_COUNTS 
             SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
@@ -699,6 +708,17 @@ def modify(request, table_id):
             cur.execute(f"""UPDATE representative_keys 
             SET REPRESENTATIVE_KEY = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
             db.commit()
+
+            if request.POST.get(f"type{i}") == "change":
+                try:
+                    cur.execute(f"SELECT {categorical[i][0]} FROM {table['table_name']}")
+                    data = cur.fetchall()
+                    for j in data:
+                        # print(j)
+                        print(re.search(regEx2, j[0]))
+                except:
+                    print("exception!")
+                    pass
 
     context = {'table': table, "is_db": request.session.get('host'),
                "key_list": key_list, "numeric": numeric, "categorical": categorical}

@@ -44,7 +44,14 @@
 
                         {% csrf_token %}
                         {% for col in row %}
-                        {% if forloop.counter0 == 9 %}
+                        {% if forloop.counter0 == 1 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <select style="text-align: center; width:80%" name="type{{ forloop.parentloop.counter0 }}">
+                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="change">변경</option>
+                                </select>
+                            </td>
+                        {% elif forloop.counter0 == 9 %}
                             <td colspan="2" style="overflow:auto;">
                                 <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
                             </td>
@@ -105,7 +112,14 @@
                     <tr>
                         {% csrf_token %}
                         {% for col in row %}
-                        {% if forloop.counter0 == 7 %}
+                        {% if forloop.counter0 == 1 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <select style="text-align: center; width:80%" name="type{{ forloop.parentloop.counter0 }}">
+                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="change">변경</option>
+                                </select>
+                            </td>
+                        {% elif forloop.counter0 == 7 %}
                             <td colspan="2" style="overflow:auto;">
                                 <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
                             </td>
