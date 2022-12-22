@@ -24,6 +24,12 @@
             {% elif forloop.first %}
             <td>{{data}}</td>
             <input type="hidden" name="table_name" value={{data}}>
+            {% elif forloop.counter == 3 %}
+            <td><select class="custom-select mr-sm-2" id="rprop" name="rprop">
+              {% for key in data %}
+                <option value={{key}}>{{key}}</option>
+              {% endfor %}
+            </select></td>
             {% else %}
             <td>{{data}}</td>
             {% endif %}

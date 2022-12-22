@@ -116,7 +116,7 @@ def multijoin_main(request):
             occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' ]
             occupied_rkey = [key_dict[rkey] for rkey in key_dict.keys() if key_dict[rkey] != None and key_dict[rkey] != '' and key_dict[rkey] != '-' ]
             
-            total_tables[i][2] = occupied_rprop
+            total_tables[i][2] = list(set(occupied_rprop))
             total_tables[i][3] = occupied_rkey
             
         db.close()
@@ -141,14 +141,23 @@ def multijoin(request):
                             port=request.session.get('port'),)
         table_name="Not selected"
         rkey = "No key"
+        rprop = "No prop"
         if request.method == 'POST':
             table_name = request.POST.get('table_name')
             rkey = request.POST.get('rkey')
+            rprop = request.POST.get('rprop')
             
         cur = db.cursor()
         cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
         
-        chosen_tables = cur.fetchall()
+        chosen_tables = list(cur.fetchall())
+        chosen_tables[0] = list(chosen_tables[0])
+        prop_dict = json.loads(chosen_tables[0][2].replace("'", '"'))
+        
+        occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' ]
+        chosen_tables[0][2] = list(set(occupied_rprop))
+        
+        
         cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE RKEY='{chosen_tables[0][3]}' and table_name != '{table_name}'")
         total_tables = list(cur.fetchall())
         filtered_tables = []
@@ -175,6 +184,7 @@ def multijoin(request):
                     
                     "chosen_tables":chosen_tables,
                     "rkey":rkey,
+                    "rprop":rprop,
                     })
 
 
