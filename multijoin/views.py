@@ -4,6 +4,7 @@ import MySQLdb
 from board.views import undb
 import json
 import numpy as np
+import pandas as pd
 # Create your views here.
 
 def multijoin_main(request):
@@ -351,3 +352,32 @@ def check_result(request):
                     "port":request.session.get('port'),
                     "result":result,
                     })
+
+def download_view(request):
+    db = MySQLdb.connect(host=request.session.get('host'),
+                        user=request.session.get('user'),
+                        passwd=request.session.get('passwd'),
+                        db=request.session.get('db'),
+                        port=request.session.get('port'),)
+
+    cur = db.cursor()
+    table_name = request.POST.get('table_name')
+
+    cur.execute("DESC MULTI_JOIN_RESULTS")
+    headers = np.array(cur.fetchall())[:, 0]
+    cur.execute(f"""SELECT * FROM MULTI_JOIN_RESULTS 
+                    WHERE JOINED_NAME='{table_name}'""")
+    results = np.array(cur.fetchall())
+    data = {header:results[:, i] for i, header in enumerate(headers)}
+    outcsv = pd.DataFrame(data)
+    outcsv.to_csv(f'{table_name}_view.csv')
+
+    cur.execute(f"DESC {table_name}")
+    headers = np.array(cur.fetchall())[:, 0]
+    cur.execute(f"""SELECT * FROM {table_name}""")
+    results = np.array(cur.fetchall())
+    data = {header:results[:, i] for i, header in enumerate(headers)}
+    outcsv = pd.DataFrame(data)
+    outcsv.to_csv(f'{table_name}_result.csv', index=False)
+
+    return check_result(request)

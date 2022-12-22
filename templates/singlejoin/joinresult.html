@@ -10,8 +10,9 @@
         }
     </style>
     </head>
+    {% if success %}
     <table style="table-layout: fixed">
-<thead>
+    <thead>
     <tr>
         <th scope="col">테이블A</th>
         <th scope="col">테이블A<br>레코드 수</th>
@@ -26,7 +27,7 @@
         <th scope="col">결합 진행상황</th>
         <th scope="col">결합 테이<br>블명</th>
     </tr>
-</thead>
+    </thead>
     <tbody>
         <td>{{ tablename }}</td>
         <td>{{ base_count }}</td>
@@ -42,4 +43,9 @@
         <td>{{ result_table_name }}</td>
     </tbody>
     </table>
+    {% else %}
+    <h3>Join failed :( </h3>
+    <h3>Error: </p>{{msg}}</h3>
+    {% endif %}
+
 {% endblock %}

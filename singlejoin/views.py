@@ -263,13 +263,13 @@ def join(request):
                 join_columns_sql = ','.join(join_columns)
 
                 cur.execute(f"DROP TABLE IF EXISTS {table_name}_{join_table_name}")
-                cur.execute(f"""CREATE TABLE {table_name[:5]}_{join_table_name[:5]} AS 
+                cur.execute(f"""CREATE TABLE {table_name[:7]}_{join_table_name[:7]} AS 
                                 SELECT {base_columns_sql}, {join_columns_sql} FROM {table_name} AS T1
                                 INNER JOIN {join_table_name} AS T2
                                 ON T1.{base_key_prop}=T2.{join_key_prop}
                 """)
                 db.commit()
-                cur.execute(f"SELECT COUNT(*) FROM {table_name[:5]}_{join_table_name[:5]}")
+                cur.execute(f"SELECT COUNT(*) FROM {table_name[:7]}_{join_table_name[:7]}")
                 join_result_count = int(cur.fetchone()[0])
 
                 cur.execute(f"SELECT COUNTS FROM TABLE_COUNTS WHERE table_name='{table_name}'")
@@ -280,6 +280,9 @@ def join(request):
 
             except MySQLdb.Error as e:
                 success = False
+                base_count = 1
+                join_result_count = 1
+                join_count = 1
                 msg += str(e)
 
     return render(request, 'singlejoin/joinresult.html', {"tablename": table_name, "is_db": request.session.get('host'),

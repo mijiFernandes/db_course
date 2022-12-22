@@ -24,7 +24,7 @@
       <tbody>
 
       {% for tuples in result %}
-        <tr><form method="post" action="{% url 'download' %}">
+        <tr><form method="post" action="{% url 'multi_download' %}">
           {% csrf_token %}
         {% for data in tuples %}
           {% if forloop.last%}
