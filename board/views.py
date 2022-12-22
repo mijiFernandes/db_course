@@ -3,7 +3,11 @@ import pandas as pd
 import MySQLdb
 import json
 import re
+from django.http import HttpResponse
+import csv
+from django.template import loader
 
+regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
 
 def main(request):
     return render(request, "main.html", {"is_db": request.session.get('host')})
@@ -73,7 +77,7 @@ def undb(request):
     return render(request, "undb.html", {"is_db": request.session.get('host')})
 
 
-def csv(request):
+def csv_register(request):
     if request.method == "POST":
         db = MySQLdb.connect(host=request.session.get('host'),
                              user=request.session.get('user'),
@@ -217,6 +221,187 @@ def table_delete(request, table_id):
     return redirect('modify')
 
 
+def download_num(request, table_id):
+    db = MySQLdb.connect(host=request.session.get('host'),
+                         user=request.session.get('user'),
+                         passwd=request.session.get('passwd'),
+                         db=request.session.get('db'),
+                         port=request.session.get('port'))
+
+    cur = db.cursor()
+    cur.execute(f"""SELECT * FROM TABLE_COUNTS 
+                    WHERE id={table_id}""")
+    temp = cur.fetchone()
+
+    table = {"id": temp[0],
+         "table_name": temp[1],
+         "records": temp[2],
+         "scan": temp[3],
+         "key_list": temp[4],
+         "attributes": temp[5],
+         "representatives": temp[6],
+         "representative_key": temp[7]}
+    key_list = json.decoder.JSONDecoder().decode(table['key_list'])
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': f'attachment; filename="numeric_data_of_{table["table_name"]}.csv"'})
+    response.write(u''.encode('utf-8-sig'))
+    writer = csv.writer(response)
+    writer.writerow(['속성명', '데이터 타입', 'Null 레코드 수', 'Null 레코드 비율', '상이 수치값',
+                       '최댓값', '최솟값', '0 레코드 수', '0 레코드 비율', '대표 속성', '결합키 후보', '대표 결합키'])
+
+    rows = []
+
+    cur.execute(f"DESC {table['table_name']}")
+    for i in cur.fetchall():
+        cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table['table_name']}")
+        no_null = cur.fetchone()
+        row = [i[0], i[1], table['records'] - no_null[0],
+               float(round((table['records'] - no_null[0]) / table['records'], 8))]
+
+        cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table['table_name']}")
+
+        distinct = cur.fetchone()[0]
+        row.append(distinct)
+
+        if "int" in row[1].lower():
+            cur.execute(f"SELECT MAX({i[0]}) AS maximum, MIN({i[0]}) AS minimum FROM {table['table_name']};")
+            maxMin = cur.fetchall()
+
+            # Append max and min values
+            row.append(maxMin[0][0])
+            row.append(maxMin[0][1])
+
+            cur.execute(f"SELECT COUNT(*) FROM {table['table_name']} WHERE {i[0]} = 0;")
+            zeroValue = cur.fetchall()
+
+            # Append zero value count
+            row.append(zeroValue[0][0])
+            row.append(float(round(zeroValue[0][0] / table['records'], 8)))
+
+        representatives = dict(json.decoder.JSONDecoder().decode(table['representatives']))
+
+        if not representatives[f"{i[0]}"]:
+            row.append("-")
+        else:
+            row.append(representatives[f"{i[0]}"])
+
+        if distinct / table['records'] >= 0.9:
+            row.append("O")
+        else:
+            row.append("X")
+        rows.append(row)
+
+        representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
+
+        if not representative_key[f"{i[0]}"]:
+            row.append("-")
+        else:
+            row.append(representative_key[f"{i[0]}"])
+
+    for row in rows:
+        if "int" in row[1].lower():
+            writer.writerow(row)
+
+    db.close()
+
+    return response
+
+
+def download_cat(request, table_id):
+    db = MySQLdb.connect(host=request.session.get('host'),
+                         user=request.session.get('user'),
+                         passwd=request.session.get('passwd'),
+                         db=request.session.get('db'),
+                         port=request.session.get('port'))
+
+    cur = db.cursor()
+    cur.execute(f"""SELECT * FROM TABLE_COUNTS 
+                    WHERE id={table_id}""")
+    temp = cur.fetchone()
+
+    table = {"id": temp[0],
+         "table_name": temp[1],
+         "records": temp[2],
+         "scan": temp[3],
+         "key_list": temp[4],
+         "attributes": temp[5],
+         "representatives": temp[6],
+         "representative_key": temp[7]}
+    key_list = json.decoder.JSONDecoder().decode(table['key_list'])
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': f'attachment; filename="categorical_data_of_{table["table_name"]}.csv"'})
+    response.write(u''.encode('utf-8-sig'))
+    writer = csv.writer(response)
+    writer.writerow(['속성명', '데이터 타입', 'Null 레코드 수', 'Null 레코드 비율', '상이 범주값',
+                       '특수문자 포함 레코드 수', '특수문자 포함 레코드 비율', '대표 속성', '결합키 후보', '대표 결합키'])
+
+    rows = []
+
+    cur.execute(f"DESC {table['table_name']}")
+    for i in cur.fetchall():
+        cur.execute(f"SELECT COUNT(`{i[0]}`) FROM {table['table_name']}")
+        no_null = cur.fetchone()
+        row = [i[0], i[1], table['records'] - no_null[0],
+               float(round((table['records'] - no_null[0]) / table['records'], 8))]
+
+        cur.execute(f"SELECT COUNT(DISTINCT `{i[0]}`) FROM {table['table_name']}")
+
+        distinct = cur.fetchone()[0]
+        row.append(distinct)
+
+        if "int" in row[1].lower():
+            continue
+        else:
+            count = 0
+            # Converts record to string. This is to ensure null values and numbers are parsed as strings
+            cur.execute(f"SELECT {i[0]} FROM {table['table_name']};")
+            colVal = list(cur.fetchall())
+            for j in colVal:
+                # Converts record to string. This is to ensure null values and numbers are parsed as strings
+                string = str(j[0])
+
+                # Compare with regular expression
+                result = re.search(regEx, string)
+
+                # If found special character, increase count
+                if result:
+                    count += 1
+            row.append(count)
+            row.append(float(round(count / table['records'], 8)))
+
+        representatives = dict(json.decoder.JSONDecoder().decode(table['representatives']))
+
+        if not representatives[f"{i[0]}"]:
+            row.append("-")
+        else:
+            row.append(representatives[f"{i[0]}"])
+
+        if distinct / table['records'] >= 0.9:
+            row.append("O")
+        else:
+            row.append("X")
+        rows.append(row)
+
+        representative_key = dict(json.decoder.JSONDecoder().decode(table['representative_key']))
+
+        if not representative_key[f"{i[0]}"]:
+            row.append("-")
+        else:
+            row.append(representative_key[f"{i[0]}"])
+
+    categorical = []
+
+    for row in rows:
+        if "int" in row[1].lower():
+            continue
+        else:
+            categorical.append(row)
+            writer.writerow(row)
+
+    db.close()
+
+    return response
+
 def detail(request, table_id):
     db = MySQLdb.connect(host=request.session.get('host'),
                          user=request.session.get('user'),
@@ -225,6 +410,7 @@ def detail(request, table_id):
                          port=request.session.get('port'))
 
     cur = db.cursor()
+
     regEx = "[^a-zA-Z0-9\u3130-\u318F\uAC00-\uD7AF\s]"
     cur.execute(f"""SELECT * FROM TABLE_COUNTS 
                     WHERE id={table_id}""")
@@ -330,7 +516,6 @@ def detail(request, table_id):
                 numeric.append(row)
             else:
                 categorical.append(row)
-
         context = {'table': table, "is_db": request.session.get('host'),
                    "key_list": key_list, "numeric": numeric, "categorical": categorical}
         db.close()
@@ -364,6 +549,39 @@ def modify(request, table_id):
              "representative_key": temp[7]}
     key_list = json.decoder.JSONDecoder().decode(table['key_list'])
     rows = []
+
+    if request.method == "POST" and request.POST.get('delete'):
+        cur.execute(f"ALTER TABLE {table['table_name']} DROP COLUMN {request.POST.get('delete')}")
+        attrs = list(json.decoder.JSONDecoder().decode(table["attributes"]))
+        for attr in attrs:
+            if attr == request.POST.get('delete'):
+                attrs.remove(request.POST.get('delete'))
+                cur.execute(f"""UPDATE TABLE_COUNTS 
+                SET ATTRIBUTES = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                db.commit()
+                break
+
+        attrs = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
+
+        for attr in attrs:
+            if attr == request.POST.get('delete'):
+                del attrs[attr]
+                cur.execute(f"""UPDATE TABLE_COUNTS
+                SET representatives = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                db.commit()
+                break
+
+        attrs = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+        for attr in attrs:
+            if attr == request.POST.get('delete'):
+                del attrs[attr]
+                cur.execute(f"""UPDATE TABLE_COUNTS
+                SET representative_key = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                cur.execute(f"""UPDATE representative_keys
+                SET representative_prop = '{json.dumps(attrs, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+                db.commit()
+                break
+
 
     cur.execute(f"DESC {table['table_name']}")
     for i in cur.fetchall():
@@ -437,55 +655,45 @@ def modify(request, table_id):
         else:
             categorical.append(row)
 
-    if request.method == "POST":
-        if request.POST.get('delete'):
-            cur.execute(f"ALTER TABLE {table['table_name']} DROP COLUMN {request.POST.get('delete')}")
-            temp = list(json.decoder.JSONDecoder().decode(table["attributes"]))
-            for attr in temp:
-                if attr == request.POST.get('delete'):
-                    temp.remove(request.POST.get('delete'))
-                    cur.execute(f"""UPDATE TABLE_COUNTS 
-                    SET ATTRIBUTES = '{json.dumps(temp, ensure_ascii=False)}' WHERE id = {table["id"]};""")
-                    db.commit()
-                    break
-        elif request.POST.get('num_edit'):
-            representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
-            representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
-            for i in range(0, len(numeric)):
-                if not request.POST.get(str(i)):
-                    representatives[numeric[i][0]] = "-"
-                    numeric[i][9] = "-"
-                else:
-                    representatives[numeric[i][0]] = request.POST.get(str(i))
-                    numeric[i][9] = request.POST.get(str(i))
+    if request.method == "POST" and request.POST.get('num_edit'):
+        representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
+        representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+        for i in range(0, len(numeric)):
+            if not request.POST.get(str(i)):
+                representatives[numeric[i][0]] = "-"
+                numeric[i][9] = "-"
+            else:
+                representatives[numeric[i][0]] = request.POST.get(str(i))
+                numeric[i][9] = request.POST.get(str(i))
 
-                representative_key[numeric[i][0]] = request.POST.get(f"representative_key{i}")
-                numeric[i][11] = request.POST.get(f"representative_key{i}")
+            representative_key[numeric[i][0]] = request.POST.get(f"representative_key{i}")
+            numeric[i][11] = request.POST.get(f"representative_key{i}")
 
-                cur.execute(f"""UPDATE TABLE_COUNTS 
-                SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
-                cur.execute(f"""UPDATE TABLE_COUNTS 
-                SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
-                db.commit()
-        else:
-            representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
-            representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
-            for i in range(0, len(categorical)):
-                if not request.POST.get(str(i)):
-                    representatives[categorical[i][0]] = "-"
-                    categorical[i][7] = "-"
-                else:
-                    representatives[categorical[i][0]] = request.POST.get(str(i))
-                    categorical[i][7] = request.POST.get(str(i))
+            cur.execute(f"""UPDATE TABLE_COUNTS 
+            SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+            cur.execute(f"""UPDATE TABLE_COUNTS 
+            SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+            db.commit()
 
-                representative_key[categorical[i][0]] = request.POST.get(f"representative_key{i}")
-                categorical[i][9] = request.POST.get(f"representative_key{i}")
+    if request.method == "POST" and request.POST.get('cat_edit'):
+        representatives = dict(json.decoder.JSONDecoder().decode(table["representatives"]))
+        representative_key = dict(json.decoder.JSONDecoder().decode(table["representative_key"]))
+        for i in range(0, len(categorical)):
+            if not request.POST.get(str(i)):
+                representatives[categorical[i][0]] = "-"
+                categorical[i][7] = "-"
+            else:
+                representatives[categorical[i][0]] = request.POST.get(str(i))
+                categorical[i][7] = request.POST.get(str(i))
 
-                cur.execute(f"""UPDATE TABLE_COUNTS 
-                SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
-                cur.execute(f"""UPDATE TABLE_COUNTS 
-                SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
-                db.commit()
+            representative_key[categorical[i][0]] = request.POST.get(f"representative_key{i}")
+            categorical[i][9] = request.POST.get(f"representative_key{i}")
+
+            cur.execute(f"""UPDATE TABLE_COUNTS 
+            SET representatives = '{json.dumps(representatives, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+            cur.execute(f"""UPDATE TABLE_COUNTS 
+            SET representative_key = '{json.dumps(representative_key, ensure_ascii=False)}' WHERE id = {table["id"]};""")
+            db.commit()
 
     context = {'table': table, "is_db": request.session.get('host'),
                "key_list": key_list, "numeric": numeric, "categorical": categorical}
