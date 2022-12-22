@@ -1,10 +1,14 @@
 {% extends 'index.html' %}
 {% block content %}
+{% if login == 1 %}
 <div>
     <form enctype="multipart/form-data" action="{% url 'csv' %}" method="post">
         {% csrf_token %}
         <input type="file" name="csv_file" accept=".csv">
-        <input type="submit" value="등록">
+        <input type="submit" value="등록" class="btn btn-primary">
     </form>
 </div>
+{% else %}
+<h3> DB로그인을 해주세요 </h3>
+{% endif %}
 {% endblock %}

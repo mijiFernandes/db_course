@@ -1,5 +1,6 @@
 {% extends 'index.html' %}
 {% block content %}
+{% if login == 1 %}
 <div class="container-fluid">
   <h4 class="mb-3 mt-5">단일 결합</h4>
   <small id="Help" class="form-text text-muted mb-2">각 검색은 OR 연산으로 이루어집니다. 단, 속성명을 입력할 경우 해당 속성이 없는 테이블은 검색되지 않습니다.</small>
@@ -81,4 +82,7 @@
   </table>
 
 </div>
+{% else %}
+<h3> DB로그인을 해주세요 </h3>
+{% endif %}
 {% endblock %}

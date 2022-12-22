@@ -152,8 +152,7 @@ def singlejoin_main(request):
                        "standard_keys": STANDARD_KEYS,
                        "representative_props": REPRESENTATIVE_PROPS, })
     except TypeError:
-        # return undb(request)
-        pass
+        return undb(request)
 
 
 def singlejoin(request):

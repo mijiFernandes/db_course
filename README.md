@@ -1,7 +1,5 @@
-<<<<<<< HEAD
 # 2022-2 연세대학교 데이터베이스 수업 FINAL PROJECT
 # - 데이터 특성 스캔 프로그램
-=======
 # db_course
 
 22/12/20 12:30 시점 Django model 없이 Raw SQL로 전부 대체
@@ -10,7 +8,6 @@
 **DB 등록 시에 TABLE_COUNTS라는 전체 테이블 관리 테이블 생성
 
 ![슬라이드6](https://user-images.githubusercontent.com/99490528/208578085-f17fd575-f947-4037-ba15-3214c630985c.PNG)
->>>>>>> 8d24e1e7388be53fcf4694ebe46bba87bf2918a2
 
 
 **CSV 파일 업로드 시에 해당 CSV파일 정보를 바탕으로 한 테이블 생성 후 TABLE_COUNTS 테이블에도 필요 정보 등록

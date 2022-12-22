@@ -2,14 +2,14 @@
 {% block content %}
 <body>
     <div>
-        <button><a href="{% url 'scan' %}">목록으로</a></button>
+        <button class="btn btn-link"><a href="{% url 'scan' %}">목록으로</a></button>
     </div>
     <br>
     {% if not table.scan %}
     <div>
         <form method="post">
             {% csrf_token %}
-            <input type="submit" value="스캔">
+            <input type="submit" value="스캔" class="btn btn-link">
         </form>
     </div>
     {% endif %}
@@ -46,7 +46,7 @@
             </tbody>
         </table>
         <div>
-            <button>
+            <button class="btn btn-link">
                 <a href="{% url 'download_num' table.id %}" style="text-decoration: none; color: inherit;">수치 속성 스캔 결과 내려받기</a>
             </button>
         </div>
@@ -84,7 +84,7 @@
             </tbody>
         </table>
         <div>
-            <button>
+            <button class="btn btn-link">
                 <a href="{% url 'download_cat' table.id  %}" style="text-decoration: none; color: inherit;">범주 속성 스캔 결과 내려받기</a>
             </button>
         </div>
