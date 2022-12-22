@@ -54,7 +54,7 @@ def multijoin_main(request):
             # RPROP check
             drop=True
             for prop in prop_dict.values():
-                if prop:
+                if prop is not None and prop != '' and prop != '-':
                     drop = False
                     break
             if drop:
@@ -63,7 +63,7 @@ def multijoin_main(request):
             # RKEY check
             drop = True
             for prop in key_dict.values():
-                if prop:
+                if prop is not None and prop != '' and prop != '-':
                     drop = False
                     break
             if drop:
@@ -109,12 +109,15 @@ def multijoin_main(request):
             # is a dictionary which has representative key name as a key, and 
             # a corresponding attribute as a value
             total_tables[i] = list(total_tables[i])
-            strs = total_tables[i][3].replace("'", '"')
-           
-            out_dict = json.loads(strs)
-            rkeys = list(out_dict.keys())
-            occupied_keys = [rkey for rkey in rkeys if out_dict[rkey] != None and out_dict[rkey] != '' and out_dict[rkey] != '-' ]
-            total_tables[i][3] = occupied_keys
+        
+            prop_dict = json.loads(total_tables[i][2].replace("'", '"'))
+            key_dict = json.loads(total_tables[i][3].replace("'", '"'))
+
+            occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' ]
+            occupied_rkey = [key_dict[rkey] for rkey in key_dict.keys() if key_dict[rkey] != None and key_dict[rkey] != '' and key_dict[rkey] != '-' ]
+            
+            total_tables[i][2] = occupied_rprop
+            total_tables[i][3] = occupied_rkey
             
         db.close()
         return render(request, 'multijoin/main.html', {"total_tables":total_tables,"is_db": request.session.get('host'),
