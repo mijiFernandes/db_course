@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+{% extends 'index.html' %}
+{% block content %}
 <body>
     <div>
         <button><a href="{% url 'main' %}">메인으로</a></button>
@@ -34,4 +30,4 @@
         </table>
     </div>
 </body>
-</html>
+{% endblock %}
