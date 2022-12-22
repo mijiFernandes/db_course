@@ -101,7 +101,13 @@ def undb(request):
     return render(request, "undb.html", {"login":0})
    
 
-
+def final_result(request):
+    return render(request, "final_result.html", {"is_db": request.session.get('host'),
+                    "user": request.session.get('user'),
+                    "passwd":request.session.get('passwd'),
+                    "db":request.session.get('db'),
+                    "login":request.session.get('login'),
+                    "port":request.session.get('port'),})
 
 
 def csv(request):

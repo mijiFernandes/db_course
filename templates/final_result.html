@@ -1,0 +1,12 @@
+
+{% extends 'index.html' %}
+{% block content %}
+<div class="container-fluid">
+  <h4 class="mb-3 mt-5">통합 결합 결과 조회</h4>
+  <div class="container-fluid">
+  <a href="{% url 'single_result_table' %}"> 단일결합 결과 조회</a>
+  <a href="{% url 'multijoin_result' %}"> 다중결합 결과 조회</a>
+  <a href="{% url 'scan' %}"> 도메인 스캔 결과 조회</a>
+  </div>
+</div>
+{% endblock %}

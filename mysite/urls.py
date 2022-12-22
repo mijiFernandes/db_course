@@ -31,5 +31,6 @@ urlpatterns = [
     path('table_list/delete/<int:table_id>/', table_delete, name='table_delete'),
     path('admin/', admin.site.urls),
     path('multijoin/', include('multijoin.urls')),
-    path('singlejoin/', include('singlejoin.urls'))
+    path('singlejoin/', include('singlejoin.urls')),
+    path('final_result/', final_result, name='final_result'),
 ]

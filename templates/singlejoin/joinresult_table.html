@@ -1,0 +1,42 @@
+
+{% extends 'index.html' %}
+{% block content %}
+<div class="container-fluid">
+  <h4 class="mb-3 mt-5">단일 결합 결과 조회</h4>
+  
+  <table class="table table-responsive"  style="table-layout: fixed;">
+      <thead>
+        <tr>
+          <th scope="col">테이블 A 이름</th>
+          <th scope="col">테이블 A 레코드 수</th>
+          <th scope="col">테이블 A 결합 속성</th>
+          <th scope="col">테이블 B 이름</th>
+          <th scope="col">테이블 B 레코드 수</th>
+          <th scope="col">테이블 B 결합 속성</th>
+          <th scope="col">대표 결합키</th>
+          <th scope="col">결합 결과 레코드 수</th>
+          <th scope="col">결합성공률 (W1)</th>
+          <th scope="col">결합성공률 (W2)</th>
+          <th scope="col">결합 상태</th>
+          <th scope="col">결합테이블명</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      {% for tuples in result %}
+        <tr><form method="post" action="{% url 'single_download' %}">
+          {% csrf_token %}
+        {% for data in tuples %}
+          {% if forloop.last%}
+          <td><button class="btn btn-link" type="submit" name="table_name" value={{data}}>{{data}}</button></td>
+          {% else %}
+          <td style="width: 30%">{{data}}</td>
+          {% endif %}
+        {% endfor %}
+        </tr></form> 
+      {% endfor %}
+      </tbody>
+  </table>
+  
+</div>
+{% endblock %}
