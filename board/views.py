@@ -80,9 +80,9 @@ def db(request):
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;""")
 
             cur.execute("""CREATE TABLE IF NOT EXISTS `REPRESENTATIVE_KEYS` (
-                `ID` INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                `TABLE_NAME` TEXT COLLATE UTF8_BIN DEFAULT NULL,
-                    `REPRESENTATIVE_PROP` TEXT COLLATE UTF8_BIN DEFAULT NULL
+                   `ID` INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+                   `TABLE_NAME` TEXT COLLATE UTF8_BIN DEFAULT NULL,
+                    `REPRESENTATIVE_KEY` TEXT COLLATE UTF8_BIN DEFAULT NULL
                     ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COLLATE=UTF8_BIN;""")
             db.commit()
     except MySQLdb.Error as e:
