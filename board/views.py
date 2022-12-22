@@ -165,7 +165,7 @@ def csv(request):
             representatives[i[0]] = None
             representative_key[i[0]] = None
 
-        sql = f"""INSERT INTO `TABLE_COUNTS` (`TABLE_NAME`, `COUNTS`, `SCAN`, `KEY_LIST`, `ATTRIBUTES`, 
+        sql = f"""INSERT INTO TABLE_COUNTS (`TABLE_NAME`, `COUNTS`, `SCAN`, `KEY_LIST`, `ATTRIBUTES`, 
         `REPRESENTATIVES`, `REPRESENTATIVE_KEY`) VALUES (
         '{table_name}', {cur.execute(f"SELECT * FROM {table_name}")}, '0', 
         '{json.dumps(key_list, ensure_ascii=False)}', '{json.dumps(attributes, ensure_ascii=False)}',
@@ -189,7 +189,7 @@ def list_to_scan(request):
                          port=int(request.session.get('port')))
 
     cur = db.cursor()
-    sql = """SELECT * FROM `TABLE_COUNTS`"""
+    sql = """SELECT * FROM TABLE_COUNTS"""
     cur.execute(sql)
     table_list = []
     tables = cur.fetchall()

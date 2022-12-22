@@ -57,6 +57,12 @@
             {% if forloop.first %}
               <td><input class="check-input" type="checkbox" value={{data}} name="join[]"></td>  
               <td>{{data}}</td>
+            {% elif forloop.counter == 3 %}
+              <td><select class="custom-select mr-sm-2" id="rprop" name="rprop">
+                {% for key in data %}
+                  <option value={{key}}>{{key}}</option>
+                {% endfor %}
+              </select></td>
             {% else %}
               <td>{{data}}</td>
             {% endif %}

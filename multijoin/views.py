@@ -69,13 +69,17 @@ def multijoin_main(request):
             if drop:
                 dropped_joinables.append(tuple_[0])
                 continue
-        
+        cur.execute("DROP TABLE IF EXISTS FILTERED_TABLE")
+        cur.execute("""CREATE TABLE FILTERED_TABLE AS 
+                       SELECT * FROM JOINABLE_TABLES""")
         for dropped in dropped_joinables:
-            cur.execute(f"DELETE FROM JOINABLE_TABLES WHERE TABLE_NAME='{dropped}'")
-            db.commit()
+            cur.execute(f"""DELETE FROM FILTERED_TABLE
+                            WHERE TABLE_NAME='{dropped}'""")
+        db.commit()
         if request.method == 'POST':
             table_name = request.POST.get('table_name')
             standard_key = request.POST.get('standard_key')
+            # print("-"*20, standard_key)
             rprop = request.POST.get('rprop')
             prop_name = request.POST.get('prop_name')
             cur.execute(f"SELECT table_name from JOINABLE_TABLES where table_name LIKE '%{table_name}%'")
@@ -95,15 +99,16 @@ def multijoin_main(request):
                 tables.append("'1nNoNaMeSMaTcHeDn1'")
 
             str_tables = '('+','.join(tables)+')'
-            cur.execute(f"""SELECT * from JOINABLE_TABLES where 
+            cur.execute(f"""SELECT * from FILTERED_TABLE where 
                             (table_name LIKE '%{table_name}%' and table_name in {str_tables})
-                            or rkey LIKE '{standard_key}' 
-                            or rprop LIKE '{rprop}'
                             """)
         # total_tables = list(zip(tables, counts, properties, pks))
         else:
-            cur.execute("SELECT * from JOINABLE_TABLES")
+            standard_key = ""
+            rprop = ""
+            cur.execute("SELECT * from FILTERED_TABLE")
         total_tables = list(cur.fetchall())
+        filtered_tables = []
         for i in range(len(total_tables)):
             # total_tables[i][3] : 'attributes' from REPRESENTATIVE_KEYS table
             # is a dictionary which has representative key name as a key, and 
@@ -113,14 +118,22 @@ def multijoin_main(request):
             prop_dict = json.loads(total_tables[i][2].replace("'", '"'))
             key_dict = json.loads(total_tables[i][3].replace("'", '"'))
 
-            occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' ]
-            occupied_rkey = [key_dict[rkey] for rkey in key_dict.keys() if key_dict[rkey] != None and key_dict[rkey] != '' and key_dict[rkey] != '-' ]
-            
+            if rprop == "" or rprop == "대표 속성":
+                occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' ]
+            else:
+                occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' and prop_dict[rkey] == rprop ]
+            if standard_key == "" or standard_key == "표준 결합키":
+                occupied_rkey = [key_dict[rkey] for rkey in key_dict.keys() if key_dict[rkey] != None and key_dict[rkey] != '' and key_dict[rkey] != '-' ]
+            else:
+                occupied_rkey = [key_dict[rkey] for rkey in key_dict.keys() if key_dict[rkey] != None and key_dict[rkey] != '' and key_dict[rkey] != '-' and key_dict[rkey] == standard_key]
+            if len(occupied_rkey) == 0 or len(occupied_rprop)==0:
+                continue
             total_tables[i][2] = list(set(occupied_rprop))
             total_tables[i][3] = occupied_rkey
+            filtered_tables.append(total_tables[i])
             
         db.close()
-        return render(request, 'multijoin/main.html', {"total_tables":total_tables,"is_db": request.session.get('host'),
+        return render(request, 'multijoin/main.html', {"total_tables":filtered_tables,"is_db": request.session.get('host'),
                         "user": request.session.get('user'),
                         "passwd":request.session.get('passwd'),
                         "db":request.session.get('db'),
@@ -148,7 +161,7 @@ def multijoin(request):
             rprop = request.POST.get('rprop')
             
         cur = db.cursor()
-        cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
+        cur.execute(f"SELECT * FROM FILTERED_TABLE WHERE table_name='{table_name}'")
         
         chosen_tables = list(cur.fetchall())
         chosen_tables[0] = list(chosen_tables[0])
@@ -158,7 +171,7 @@ def multijoin(request):
         chosen_tables[0][2] = list(set(occupied_rprop))
         
         
-        cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE RKEY='{chosen_tables[0][3]}' and table_name != '{table_name}'")
+        cur.execute(f"SELECT * FROM FILTERED_TABLE WHERE table_name != '{table_name}'")
         total_tables = list(cur.fetchall())
         filtered_tables = []
         for i in range(len(total_tables)):
@@ -167,11 +180,13 @@ def multijoin(request):
             # a corresponding attribute as a value
             total_tables[i] = list(total_tables[i])
             strs = total_tables[i][3].replace("'", '"')
-           
-            out_dict = json.loads(strs)
-            if rkey not in out_dict.keys():
+            prop_dict = json.loads(total_tables[i][2].replace("'", '"'))
+            key_dict = json.loads(strs)
+            if rkey not in key_dict.values():
                 continue
+            occupied_rprop = [prop_dict[rkey] for rkey in prop_dict.keys() if prop_dict[rkey] != None and prop_dict[rkey] != '' and prop_dict[rkey] != '-' ]
             total_tables[i][3] = rkey
+            total_tables[i][2] = list(set(occupied_rprop))
             filtered_tables.append(total_tables[i])
         db.close()
 
@@ -200,10 +215,10 @@ def join(request):
 
         table_list = request.POST.getlist('join[]')
         table_name = request.POST.get('table_name')
-        print("="*20, request.POST)
+       
         rkey = request.POST.get('rkey')
 
-        cur.execute(f"SELECT * FROM JOINABLE_TABLES WHERE table_name='{table_name}'")
+        cur.execute(f"SELECT * FROM FILTERED_TABLE WHERE table_name='{table_name}'")
         chosen_tables = cur.fetchall()
     return render(request, 'multijoin/join.html', {"tablename":table_name,"is_db": request.session.get('host'),
                     "user": request.session.get('user'),
