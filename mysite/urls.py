@@ -24,10 +24,11 @@ urlpatterns = [
     path('db/', db, name='db'),
     path('undb/', undb, name='undb'),
     path('csv/', csv, name='csv'),
-    path('schema/', schema, name='schema'),
     path('table_list/',list_to_scan, name='scan'),
     path('table_list_modify/',list_to_modify, name='modify'),
     path('table_list/<int:table_id>/', detail),
+    path('table_list_modify/<int:table_id>/', modify, name='modify_detail'),
+    path('table_list/delete/<int:table_id>/', table_delete, name='table_delete'),
     path('admin/', admin.site.urls),
     path('multijoin/', include('multijoin.urls')),
     path('singlejoin/', include('singlejoin.urls'))

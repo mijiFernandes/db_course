@@ -13,13 +13,30 @@
         <h5 style="float: right; color:red">DB OFF</h5>
         {% endif %}
     </div>
+    <br>
+    <br>
     <div>
         {% if table_list %}
-            <ul>
-            {% for table in table_list %}
-                <li><a href="/table_list/{{ table.id }}/">{{ table.table_name }}</a></li>
-            {% endfor %}
-            </ul>
+        <div style="overflow:auto; width:auto; height:300px;">
+            <table style="table-layout:fixed;text-align: center;">
+                <thead>
+                    <tr>
+                        <th>테이블 명</th>
+                        <th>레코드 수</th>
+                        <th>속성</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for table in table_list %}
+                    <tr>
+                        <td style="overflow:auto;width : 100px"><a href="/table_list/{{ table.id }}/">{{ table.table_name }}</a></td>
+                        <td style="overflow:auto;width : 100px">{{ table.records }}</td>
+                        <td style="overflow:auto; width : 800px;display : inline-block;white-space : nowrap;">{{ table.attributes }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
             <p>아직 테이블이 없습니다.</p>
         {% endif %}

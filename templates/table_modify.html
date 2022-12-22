@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div>
+        <button><a href="{% url 'modify' %}">목록으로</a></button>
+        {% if is_db %}
+        <h5 style="float: right; color:green">DB ON</h5>
+        {% else %}
+        <h5 style="float: right; color:red">DB OFF</h5>
+        {% endif %}
+    </div>
+    <h1>{{ table.table_name }}</h1>
+    <button><a href="{% url 'table_delete' table.id  %}" style="text-decoration: none; color: inherit;">삭제</a></button>
+    <br>
+    <br>
+    {% if numeric %}
+    <div style="overflow:auto; width:auto; height:auto;">
+        <form action="{% url 'modify_detail' table.id %}" method="post">
+            <table style="table-layout:fixed;text-align: center;">
+                <thead>
+                    <tr>
+                        <th colspan="2">속성명</th>
+                        <th colspan="2">속성 삭제</th>
+                        <th colspan="2">데이터 타입</th>
+                        <th colspan="2">Null 레코드 수</th>
+                        <th colspan="2">Null 레코드 비율</th>
+                        <th colspan="2">상이 수치 값</th>
+                        <th colspan="2">최댓값</th>
+                        <th colspan="2">최솟값</th>
+                        <th colspan="2">0 레코드 수</th>
+                        <th colspan="2">0 레코드 비율</th>
+                        <th colspan="2">대표 속성</th>
+                        <th colspan="2">결합키 후보</th>
+                        <th colspan="2">대표 결합키</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in numeric %}
+                    <tr>
+
+                        {% csrf_token %}
+                        {% for col in row %}
+                        {% if forloop.counter0 == 9 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
+                            </td>
+                        {% elif forloop.counter0 == 11 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
+                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="-">-</option>
+                                    {% for key in key_list %}
+                                    <option value="{{ key }}">{{ key }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        {% else %}
+                            <td colspan="2" style="overflow:auto;">{{ col }}</td>
+                        {% endif %}
+
+                        {% if forloop.counter0 == 0 %}
+                            <td colspan="2" style="overflow:auto;"><button type="submit" name="delete" value="{{ col }}">삭제</button></td>
+                        {% endif %}
+
+                        {% endfor %}
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div>
+                <button type="submit" name="num_edit" value="num_edit">편집</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    <br>
+    <br>
+    <br>
+    {% if categorical %}
+    <div style="overflow:auto; width:auto; height:auto;">
+        <form action="{% url 'modify_detail' table.id %}" method="post">
+            <table style="table-layout:fixed;text-align: center;">
+                <thead>
+                    <tr>
+                        <th colspan="2">속성명</th>
+                        <th colspan="2">속성 삭제</th>
+                        <th colspan="2">데이터 타입</th>
+                        <th colspan="2">Null 레코드 수</th>
+                        <th colspan="2">Null 레코드 비율</th>
+                        <th colspan="2">상이 범주값</th>
+                        <th colspan="2">특수문자 포함 레코드 수</th>
+                        <th colspan="2">특수문자 포함 레코드 비율</th>
+                        <th colspan="2">대표 속성</th>
+                        <th colspan="2">결합키 후보</th>
+                        <th colspan="2">대표 결합키</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in categorical %}
+                    <tr>
+                        {% csrf_token %}
+                        {% for col in row %}
+                        {% if forloop.counter0 == 7 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <input style="text-align: center; width:60%" type="text" name="{{ forloop.parentloop.counter0 }}" value="{{ col }}">
+                            </td>
+                        {% elif forloop.counter0 == 9 %}
+                            <td colspan="2" style="overflow:auto;">
+                                <select style="text-align: center; width:60%" name="representative_key{{ forloop.parentloop.counter0 }}">
+                                    <option value="{{ col }}">{{ col }}</option>
+                                    <option value="-">-</option>
+                                    {% for key in key_list %}
+                                    <option value="{{ key }}">{{ key }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        {% else %}
+                            <td colspan="2" style="overflow:auto;">{{ col }}</td>
+                        {% endif %}
+
+                        {% if forloop.counter0 == 0 %}
+                            <td colspan="2" style="overflow:auto;"><button type="submit" name="delete" value="{{ col }}">삭제</button></td>
+                        {% endif %}
+
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div>
+                <button type="submit" name="cate_edit" value="cate_edit">편집</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</body>
+</html>
