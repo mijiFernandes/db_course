@@ -399,7 +399,7 @@ def download_view(request):
     results = np.array(cur.fetchall())
     data = {header:results[:, i] for i, header in enumerate(headers)}
     outcsv = pd.DataFrame(data)
-    outcsv.to_csv(f'SINGLEJOIN_{table_name}_view.csv')
+    outcsv.to_csv(f'SINGLEJOIN_{table_name}_view.csv', index=False, encoding="utf-8-sig")
 
     cur.execute(f"DESC {table_name}")
     headers = np.array(cur.fetchall())[:, 0]
@@ -407,6 +407,6 @@ def download_view(request):
     results = np.array(cur.fetchall())
     data = {header:results[:, i] for i, header in enumerate(headers)}
     outcsv = pd.DataFrame(data)
-    outcsv.to_csv(f'SINGLEJOIN_{table_name}_result.csv', index=False)
+    outcsv.to_csv(f'SINGLEJOIN_{table_name}_result.csv', index=False, encoding="utf-8-sig")
 
     return check_result(request)
